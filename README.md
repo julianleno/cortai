@@ -74,6 +74,9 @@ Com seleção automática dos melhores momentos via IA, reenquadramento intelige
 - **Moldura Social Card (`card_frame`)**: Estilo Twitter/Instagram com card flutuante.
 - **Moldura Editorial (`header_footer_frame`)**: Topo com título do canal e rodapé de marca.
 
+### 🔄 12. Aviso de Versão Nova
+- **Atualização sem caça ao link**: Ao abrir, o Cortaí confere (no máximo uma vez por dia) se saiu versão nova no GitHub e mostra um aviso discreto. No `Cortai.exe`, o botão **Atualizar agora** baixa a versão nova e reabre o app; pelo código-fonte, basta `git pull`. Só a versão é consultada, nada seu é enviado. Desligue com `CORTAI_CHECAR_ATUALIZACAO=0`.
+
 ---
 
 ## 📑 Índice
@@ -172,6 +175,7 @@ cp .env.example .env        # Windows: copy .env.example .env
 | `WHISPER_MODEL_SIZE` | `base` | Modelo do faster-whisper (`tiny`, `base`, `small`, `medium`, `large-v3`). |
 | `WHISPER_DEVICE` / `WHISPER_COMPUTE_TYPE` | `cpu` / `int8` | Use `cuda` / `float16` se tiver GPU NVIDIA. |
 | `OUTPUT_DIR` / `TEMP_DIR` / `DB_PATH` | `./storage/...` | Onde ficam os clipes, arquivos temporários e o banco SQLite. |
+| `CORTAI_CHECAR_ATUALIZACAO` | `1` | Confere uma vez por dia se há versão nova em `api.github.com` (só lê a última release pública; nada do usuário é enviado). Use `0` para desligar. |
 | `GEMINI_API_KEY`, `NVIDIA_NIM_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` | *(vazio)* | **Opcionais.** Ativam a seleção de clipes por IA na nuvem. Também podem ser configuradas na tela **/settings**. |
 
 > Sem nenhuma chave de API, o Cortaí funciona **100% local**, com o motor próprio de seleção e categorização de trechos.

@@ -44,7 +44,7 @@ body:
     id: versoes
     attributes:
       label: Versões do Cortaí, Python e FFmpeg
-      placeholder: "Cortaí 1.6.0, Python 3.12.4, FFmpeg 7.0"
+      placeholder: "Cortaí 1.6.1, Python 3.12.4, FFmpeg 7.0"
   - type: textarea
     id: logs
     attributes:

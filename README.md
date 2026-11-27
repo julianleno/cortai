@@ -6,7 +6,7 @@
 
 Transforme vídeos longos em clipes verticais (9:16) e horizontais (16:9) legendados, prontos para Shorts, TikTok e Reels. O Cortaí roda no seu computador e é gratuito.
 
-[![Versão 1.6.0](https://img.shields.io/badge/versão-1.6.0-FF6A2B)](https://github.com/julianleno/cortai/releases)
+[![Versão 1.6.1](https://img.shields.io/badge/versão-1.6.1-FF6A2B)](https://github.com/julianleno/cortai/releases)
 [![Licença GPL-3.0](https://img.shields.io/badge/licença-GPL--3.0-blue)](LICENSE)
 [![Testes](https://github.com/julianleno/cortai/actions/workflows/tests.yml/badge.svg)](https://github.com/julianleno/cortai/actions/workflows/tests.yml)
 
@@ -110,7 +110,7 @@ Para repetir as mesmas escolhas em outros vídeos, crie um template na tela **Te
 - **Vídeos em lote**: até 10 links do YouTube ou vários arquivos do computador por vez.
 - **Escolha dos trechos**: uma IA na nuvem (Gemini, OpenAI, Anthropic ou NVIDIA NIM) ou o motor local, sem nuvem. Cada clipe recebe nota, título e gancho, que você copia com um clique.
 - **Formatos**: vertical 9:16 (até 60 s) ou horizontal 16:9 (até 5 min).
-- **6 enquadramentos**: *Segue o rosto*, *Ativo por fala* (troca de rosto pela voz e pelo movimento dos lábios), *Card social*, *Editorial* (título no topo, marca embaixo), *Fundo desfocado* e *Crop central*.
+- **6 enquadramentos**: *Segue o rosto* (enquadra cada cena e acompanha quem anda), *Ativo por fala* (troca de rosto pela voz e pelo movimento dos lábios), *Card social*, *Editorial* (título no topo, marca embaixo), *Fundo desfocado* e *Crop central*.
 - **13 estilos de legenda**: Karaoke Destaque, Branco Bold, Amarelo Bold, Branco + Amarelo, Destaque Vermelho, Ciano com Sombra, Caixa Branca, Sombra 3D, Palavra da Vez, Neon, Marca-texto, Caixa Escura e Editorial Serifa.
 - **9 fontes**: Arial, Montserrat, Impact, Anton, Bebas Neue, Poppins, Inter, Outfit e Roboto.
 - **Capitalização**: CAIXA-ALTA ou Título Gramatical (conectivos como `de`, `da` e `para` ficam em minúsculas).
@@ -197,9 +197,6 @@ Entre no YouTube por um navegador do computador. Na tela **Configurações**, es
 **Os créditos da IA acabaram**
 Quando o provedor falha, o Cortaí tenta o próximo provedor com chave e, por último, o motor local. Os clipes saem mesmo assim, escolhidos pelo motor local.
 
-**"Segue o rosto" perde a pessoa**
-O enquadramento *Segue o rosto* fica fixo durante todo o clipe. Em vídeos que alternam close e plano aberto, ele erra ([issue #2](https://github.com/julianleno/cortai/issues/2)). Use *Ativo por fala* ou ajuste com **Reenquadrar**.
-
 ## Contribuindo
 
 Contribuições são bem-vindas. Leia o [guia de contribuição](CONTRIBUTING.md) e o [Código de Conduta](CODE_OF_CONDUCT.md). Para relatar uma falha de segurança, siga o [SECURITY.md](SECURITY.md). As decisões de arquitetura estão em [DECISIONS.md](DECISIONS.md).
@@ -246,6 +243,9 @@ As notas da release viram o aviso de versão nova dentro do app. Escreva as nota
 
 ## Histórico de versões
 
+- **v1.6.1**
+  - *Segue o rosto* enquadra cada cena: em vídeos com close e plano aberto, a pessoa fica no quadro o tempo todo, e o corte acompanha quem anda pelo palco.
+  - O corte em trechos ficou exato no quadro (a legenda não escorrega) e cerca de 2x mais rápido.
 - **v1.6.0**
   - Tela Novo corte em assistente de 5 etapas, com resumo ao lado.
   - Visual novo em todas as telas.

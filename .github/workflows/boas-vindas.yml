@@ -1,0 +1,34 @@
+name: Boas-vindas
+
+# Comenta na primeira issue e no primeiro PR de cada pessoa. Não roda código do PR:
+# pull_request_target só dá permissão para comentar.
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  boas-vindas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            Obrigado por abrir sua primeira issue no Cortaí! 🎬
+
+            Se for um bug, ajuda muito incluir o sistema operacional, a versão do Cortaí (aparece no rodapé do app) e o passo a passo para reproduzir. Respondemos assim que der.
+          pr-message: |
+            Obrigado pelo seu primeiro PR no Cortaí! 🎉
+
+            Algumas coisas que ajudam a revisão andar rápido:
+            - Os testes rodam no GitHub Actions. No primeiro PR, o mantenedor precisa liberar a execução; isso é normal.
+            - Se o PR resolve uma issue, escreva `Closes #número` na descrição para ela fechar sozinha.
+            - Em mudanças de interface, um print ou um vídeo curto ajuda muito.
+
+            Quando o PR for aceito, seu nome entra na lista "Quem já contribuiu" do README.

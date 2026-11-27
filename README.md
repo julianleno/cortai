@@ -40,7 +40,7 @@ Use este caminho no Linux, no macOS ou se você quer mexer no código.
 | **Deno** (opcional) | Remove o aviso "No supported JavaScript runtime" do yt-dlp ao baixar do YouTube | **Windows**: `winget install DenoLand.Deno`. **macOS**: `brew install deno`. Outros: [deno.com](https://deno.com/) |
 | **uv** (opcional) | Cria o ambiente e instala as dependências mais rápido | [docs.astral.sh/uv](https://docs.astral.sh/uv/) |
 
-Sem o Deno, o download do YouTube funciona, mas alguns formatos podem faltar ([issue #6](https://github.com/julianleno/cortai/issues/6)).
+**Deno e o YouTube:** o yt-dlp usa o Deno por padrão quando ele está no PATH. Sem um runtime JavaScript, o download do YouTube ainda funciona, mas alguns formatos podem ficar indisponíveis. Depois de instalar, abra um novo terminal e rode `deno --version` para conferir. Se o aviso continuar ou ainda faltarem formatos, veja o [guia de configuração EJS do yt-dlp](https://github.com/yt-dlp/yt-dlp/wiki/EJS).
 
 ### Windows
 
@@ -182,6 +182,9 @@ O inicializador cria o `.env` a partir do `.env.example`. Para criar à mão, ro
 
 ## Problemas comuns
 
+**Aviso "No supported JavaScript runtime" ao baixar do YouTube**
+O yt-dlp pede um runtime JavaScript para alguns formatos do YouTube. Instale o Deno (veja [Pré-requisitos](#pré-requisitos)), abra um novo terminal e rode `deno --version`. Se o aviso continuar, siga o [guia de configuração EJS do yt-dlp](https://github.com/yt-dlp/yt-dlp/wiki/EJS).
+
 **"FFmpeg não encontrado"**
 Instale o FFmpeg com o `ffprobe` e coloque a pasta `bin` no PATH (veja [Pré-requisitos](#pré-requisitos)). Depois, feche e abra o terminal e rode `ffmpeg -version` para conferir.
 
@@ -201,7 +204,7 @@ Quando o provedor falha, o Cortaí tenta o próximo provedor com chave e, por ú
 
 Contribuições são bem-vindas. Leia o [guia de contribuição](CONTRIBUTING.md) e o [Código de Conduta](CODE_OF_CONDUCT.md). Para relatar uma falha de segurança, siga o [SECURITY.md](SECURITY.md). As decisões de arquitetura estão em [DECISIONS.md](DECISIONS.md).
 
-Para começar, escolha uma das [issues marcadas como good first issue](https://github.com/julianleno/cortai/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) (#3 a #7).
+Para começar, escolha uma das [issues marcadas como good first issue](https://github.com/julianleno/cortai/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22). Comente na issue que vai pegar, para ninguém trabalhar em dobro.
 
 ### Rodar os testes
 
@@ -282,6 +285,14 @@ O Cortaí usa estes projetos open source:
 - [pywebview](https://pywebview.flowrl.com/): janela própria no Windows
 
 Criado por Julian Leno. Siga [@lenofaz no X](https://x.com/lenofaz).
+
+### Quem já contribuiu
+
+Obrigado a cada pessoa que deixou o Cortaí melhor:
+
+- [@MarioZhang420](https://github.com/MarioZhang420): guia do Deno para os downloads do YouTube ([#8](https://github.com/julianleno/cortai/pull/8)), a primeira contribuição da comunidade.
+
+Teve um PR aceito? Seu nome entra nesta lista.
 
 ## Licença
 

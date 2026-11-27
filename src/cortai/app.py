@@ -13,6 +13,8 @@ from . import templates as template_config
 from . import clip_selection
 from . import transcription as transcription_module
 from . import vocabulary as vocabulary_module
+from . import preparo
+from . import updater
 from .config import config
 from .core import download_video, render_clip_from_source
 from .segmentation import flatten_words, slice_transcription
@@ -28,11 +30,20 @@ app.jinja_env.globals['app_version'] = __version__
 logger = logging.getLogger(__name__)
 
 db.init_db(config.DB_PATH, recover_orphans=True)
+preparo.activate_local_ffmpeg()  # FFmpeg portátil instalado pela tela de preparação
+_setup_shown = False  # a tela de preparação abre sozinha uma vez por execução
 
 @app.before_request
 def _ensure_db():
     if app.config.get('TESTING'):
         db.init_db(config.DB_PATH)
+
+@app.context_processor
+def _inject_update():
+    # Só lê o que a checagem em segundo plano já guardou; nunca consulta a rede no render.
+    update = updater.available()
+    notes = updater.notes_html(update.get('notes')) if update else ''
+    return {'update': update, 'update_self': updater.can_self_update(), 'update_notes': notes}
 
 def _render_kwargs_for_template(template_id, caption_preset_override=None, casing_mode_override=None,
                                 caption_font_override=None, layout_override=None):
@@ -299,8 +310,35 @@ def rerender_clip_job(clip_id, video_path, template_id):
         logger.exception("Falha ao re-renderizar clipe")
         db.update_clip(config.DB_PATH, clip_id, status='failed', error=str(e))
 
+@app.route('/preparar')
+def preparar():
+    global _setup_shown
+    _setup_shown = True
+    return render_template('preparar.html', preparo=preparo.status())
+
+
+@app.route('/api/preparo')
+def preparo_status():
+    return jsonify(preparo.status())
+
+
+@app.route('/api/preparo/<item>', methods=['POST'])
+def preparo_start(item):
+    if request.headers.get('X-Cortai') != '1':  # barra POST vindo de outro site
+        return jsonify(ok=False, error='Pedido inválido.'), 400
+    if item == 'modelo':
+        preparo.start_model_download()
+    elif item == 'ffmpeg':
+        preparo.install_ffmpeg()
+    else:
+        return jsonify(ok=False, error='Item desconhecido.'), 404
+    return jsonify(ok=True)
+
+
 @app.route('/')
 def index():
+    if not _setup_shown and preparo.needs_setup():
+        return redirect(url_for('preparar'))
     templates_available = db.list_templates(config.DB_PATH)
     # Mesma resolução de chaves que clip_selection.suggest_clips_for_video (banco, depois .env).
     ai_enabled = any(db.get_setting(config.DB_PATH, key, fallback) for key, fallback in (
@@ -781,17 +819,97 @@ def settings_route():
     settings_data = db.get_all_settings(config.DB_PATH)
     return render_template('settings.html', settings=settings_data)
 
-if __name__ == '__main__':
+@app.route('/update/apply', methods=['POST'])
+def update_apply():
+    if request.headers.get('X-Cortai') != '1':  # barra POST vindo de outro site
+        return jsonify(ok=False, error='Pedido inválido.'), 400
+    release = updater.available()
+    if release is None or not updater.can_self_update():
+        return jsonify(ok=False, error='Não há atualização para instalar por aqui.'), 400
+    try:
+        updater.apply_update(release)
+    except updater.UpdateError as e:
+        return jsonify(ok=False, error=str(e)), 500
+    # A versão nova já foi iniciada; encerra esta depois de responder (fecha a janela junto).
+    threading.Timer(1.0, os._exit, args=(0,)).start()
+    return jsonify(ok=True)
+
+def main():
+    if not app.testing:
+        updater.start_background_check(config.DB_PATH)
     # Ensure directories exist
     os.makedirs(config.OUTPUT_DIR, exist_ok=True)
     os.makedirs(config.TEMP_DIR, exist_ok=True)
     os.makedirs(config.YTDLP_OUTDIR, exist_ok=True)
 
+    _wait_port_free(config.FLASK_HOST, config.FLASK_PORT)
+    url = f"http://{config.FLASK_HOST}:{config.FLASK_PORT}"
+    webview = _load_webview()
+    if webview:
+        _run_in_window(webview, url)
+        return
+
     if getattr(sys, 'frozen', False):
         import webbrowser
         def _open_browser():
             time.sleep(1.2)
-            webbrowser.open(f"http://{config.FLASK_HOST}:{config.FLASK_PORT}")
+            webbrowser.open(url)
         threading.Thread(target=_open_browser, daemon=True).start()
 
     app.run(host=config.FLASK_HOST, port=config.FLASK_PORT, debug=config.FLASK_DEBUG)
+
+
+def _wait_port_free(host: str, port: int, timeout: float = 10.0) -> None:
+    """Logo após uma atualização, a versão antiga ainda segura a porta por ~1 s; espera ela soltar."""
+    import socket
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            with socket.create_connection((host, port), timeout=0.3):
+                pass  # alguém ainda responde na porta
+        except OSError:
+            return
+        time.sleep(0.25)
+
+
+def _load_webview():
+    """Janela própria (pywebview) em vez do navegador. CORTAI_JANELA=0 força o modo servidor."""
+    if os.getenv('CORTAI_JANELA', '1') == '0':
+        return None
+    try:
+        import webview
+    except ImportError:
+        return None
+    return webview
+
+
+def _run_in_window(webview, url: str) -> None:
+    import socket
+
+    server = threading.Thread(
+        target=lambda: app.run(host=config.FLASK_HOST, port=config.FLASK_PORT,
+                               debug=False, use_reloader=False),
+        daemon=True,
+    )
+    server.start()
+    # Espera o servidor aceitar conexões antes de abrir a janela, senão ela mostra erro.
+    deadline = time.time() + 15
+    while time.time() < deadline:
+        try:
+            with socket.create_connection((config.FLASK_HOST, config.FLASK_PORT), timeout=0.5):
+                break
+        except OSError:
+            time.sleep(0.1)
+
+    webview.settings['ALLOW_DOWNLOADS'] = True  # botão "Baixar" dos clipes
+    if sys.platform == 'win32':
+        # Identidade própria na barra de tarefas; sem isso o Windows agrupa com o python.exe e usa o ícone dele.
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('Cortai.App')
+    icon = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'cortai.ico')
+    webview.create_window('Cortaí', url, width=1320, height=880, min_size=(900, 640))
+    webview.start(icon=icon)  # bloqueia até a janela fechar; o servidor (daemon) encerra junto
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}
+Preparando o Cortaí
+{% endblock %}
+
+{% block content %}
+<style>
+    .ct-prep-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+    .ct-prep { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 16px; border: 1px solid var(--border-dark); background: var(--surface-card); }
+    .ct-prep-icon { width: 44px; height: 44px; border-radius: 12px; flex: none; display: flex; align-items: center; justify-content: center; background: var(--bg-dark); font-size: 1.1rem; }
+    .ct-prep[data-estado="pronto"] .ct-prep-icon { color: var(--mar-text); }
+    .ct-prep[data-estado="faltando"] .ct-prep-icon { color: var(--sol); }
+    .ct-prep[data-estado="erro"] .ct-prep-icon { color: #F87171; }
+    .ct-prep-bar { height: 6px; border-radius: 3px; background: var(--border-dark); overflow: hidden; margin: 8px 0 4px; }
+    .ct-prep-bar span { display: block; height: 100%; width: 0; background: var(--caju); border-radius: 3px; transition: width .4s ease; }
+    @media (prefers-reduced-motion: reduce) { .ct-prep-bar span { transition: none; } }
+</style>
+
+<div class="mx-auto pt-3" style="max-width: 640px;">
+    <div class="text-center mb-4">
+        <h1 class="fw-bold mb-1" style="font-size: clamp(1.6rem, 3vw, 2.1rem); letter-spacing: -0.03em;">Preparando o Cortaí</h1>
+        <p class="mb-0" style="color: var(--text-muted);">Só na primeira vez: o Cortaí confere o que precisa para cortar seus vídeos.</p>
+    </div>
+
+    <section class="ct-section" aria-label="Itens da preparação">
+        <ul class="ct-prep-list">
+            <li class="ct-prep" id="prep-ffmpeg" data-estado="{{ preparo.ffmpeg.estado }}">
+                <span class="ct-prep-icon" aria-hidden="true"></span>
+                <div class="flex-grow-1" style="min-width: 0;">
+                    <strong>FFmpeg</strong>
+                    <span class="ct-hint d-block">Corta, enquadra e exporta os vídeos.</span>
+                    <div class="ct-prep-bar" hidden><span></span></div>
+                    <span class="ct-hint d-block" data-msg aria-live="polite"></span>
+                </div>
+                <button type="button" class="btn btn-caju ct-btn flex-none text-nowrap" data-action="ffmpeg" hidden>Instalar FFmpeg</button>
+            </li>
+            <li class="ct-prep" id="prep-modelo" data-estado="{{ preparo.modelo.estado }}">
+                <span class="ct-prep-icon" aria-hidden="true"></span>
+                <div class="flex-grow-1" style="min-width: 0;">
+                    <strong>Modelo de transcrição</strong>
+                    <span class="ct-hint d-block">Transforma a fala em legenda, no seu computador.</span>
+                    <div class="ct-prep-bar" hidden><span></span></div>
+                    <span class="ct-hint d-block" data-msg aria-live="polite"></span>
+                </div>
+                <button type="button" class="btn btn-outline-cortai ct-btn flex-none text-nowrap" data-action="modelo" hidden>Tentar de novo</button>
+            </li>
+        </ul>
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-4 pt-3" style="border-top: 1px solid var(--border-dark);">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-cortai ct-btn" id="prepSkip">Continuar mesmo assim</a>
+            <a href="{{ url_for('index') }}" class="btn btn-caju ct-btn" id="prepStart" aria-disabled="true">Começar <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var state = {{ preparo | tojson }};
+    var icons = { pronto: 'fa-check', faltando: 'fa-circle-exclamation', erro: 'fa-triangle-exclamation' };
+    var timer = null;
+
+    function mb(bytes) { return Math.round((bytes || 0) / 1e6); }
+
+    function progress(item, s) {
+        var bar = item.querySelector('.ct-prep-bar');
+        var busy = s.estado === 'baixando' || s.estado === 'instalando';
+        bar.hidden = !busy;
+        if (busy) bar.firstElementChild.style.width = s.total ? Math.min(100, 100 * s.baixado / s.total) + '%' : '15%';
+    }
+
+    function paint(item, s, msg, action) {
+        item.dataset.estado = s.estado;
+        var icon = item.querySelector('.ct-prep-icon');
+        var busy = s.estado === 'baixando' || s.estado === 'instalando';
+        icon.innerHTML = busy ? '<span class="spinner-border spinner-border-sm" style="color: var(--caju);"></span>'
+                              : '<i class="fas ' + (icons[s.estado] || 'fa-circle') + '"></i>';
+        item.querySelector('[data-msg]').innerHTML = msg;
+        var btn = item.querySelector('[data-action]');
+        btn.hidden = !action;
+        if (action) btn.textContent = action;
+        progress(item, s);
+    }
+
+    function render() {
+        var f = state.ffmpeg, m = state.modelo;
+        var fMsg = {
+            pronto: 'Encontrado. Tudo certo.',
+            faltando: f.pode_instalar
+                ? 'Não encontrado. O Cortaí baixa uma cópia portátil (cerca de 120 MB) só para ele, sem mexer no sistema.'
+                : 'Não encontrado. Instale com <code>sudo apt install ffmpeg</code> (Linux) ou <code>brew install ffmpeg</code> (macOS) e abra o Cortaí de novo.',
+            baixando: 'Baixando… ' + mb(f.baixado) + (f.total ? ' de ' + mb(f.total) : '') + ' MB',
+            instalando: 'Instalando…',
+            erro: (f.erro || 'Não deu certo.') + ' Verifique a internet e tente de novo.'
+        }[f.estado] || '';
+        var fAction = (f.estado === 'faltando' && f.pode_instalar) ? 'Instalar FFmpeg' : (f.estado === 'erro' && f.pode_instalar ? 'Tentar de novo' : null);
+        paint(document.getElementById('prep-ffmpeg'), f, fMsg, fAction);
+
+        var mMsg = {
+            pronto: 'Modelo "' + m.nome + '" pronto.',
+            faltando: 'Começando o download…',
+            baixando: 'Baixando o modelo "' + m.nome + '"… ' + mb(m.baixado) + (m.total ? ' de ' + mb(m.total) : '') + ' MB',
+            erro: (m.erro || 'Não deu certo.') + ' Verifique a internet e tente de novo.'
+        }[m.estado] || '';
+        paint(document.getElementById('prep-modelo'), m, mMsg, m.estado === 'erro' ? 'Tentar de novo' : null);
+
+        var startBtn = document.getElementById('prepStart'), skip = document.getElementById('prepSkip');
+        startBtn.classList.toggle('disabled', !state.pronto);
+        startBtn.setAttribute('aria-disabled', String(!state.pronto));
+        startBtn.innerHTML = (state.pronto ? 'Tudo pronto. Começar' : 'Começar') + ' <i class="fas fa-arrow-right" aria-hidden="true"></i>';
+        skip.hidden = state.pronto;
+    }
+
+    async function post(item) {
+        await fetch('/api/preparo/' + item, { method: 'POST', headers: { 'X-Cortai': '1' } }).catch(function () {});
+        poll();
+    }
+
+    async function poll() {
+        clearTimeout(timer);
+        try {
+            var r = await fetch('/api/preparo');
+            state = await r.json();
+        } catch (e) {}
+        render();
+        var busy = ['baixando', 'instalando'].indexOf(state.ffmpeg.estado) >= 0 || state.modelo.estado === 'baixando';
+        if (!state.pronto) timer = setTimeout(poll, busy ? 700 : 2000);
+    }
+
+    document.querySelectorAll('[data-action]').forEach(function (btn) {
+        btn.addEventListener('click', function () { post(btn.dataset.action); });
+    });
+
+    render();
+    // O modelo começa a baixar sozinho; o FFmpeg espera o clique (é um download de terceiros).
+    if (state.modelo.estado === 'faltando') post('modelo');
+    else poll();
+})();
+</script>
+{% endblock %}

@@ -102,3 +102,32 @@ class TestNvidiaNimLiveIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestAnthropicResponseParsing(unittest.TestCase):
+    """Resposta simulada: modelos atuais devolvem blocos de raciocínio antes do texto."""
+
+    def _post(self, body):
+        from unittest import mock
+        response = mock.Mock(status_code=200)
+        response.json.return_value = body
+        return mock.patch("cortai.providers.anthropic.httpx.post", return_value=response)
+
+    def test_text_block_after_thinking_block_is_parsed(self):
+        from cortai.providers.anthropic import AnthropicProvider
+        clips = '{"clips": [{"start": 0.0, "end": 9.0, "title": "T", "hook": "H", "justificativa": "J", "clip_score": 8.0}]}'
+        body = {"stop_reason": "end_turn", "content": [
+            {"type": "thinking", "thinking": "", "signature": "x"},
+            {"type": "text", "text": "```json\n" + clips + "\n```"},
+        ]}
+        with self._post(body) as post:
+            result = AnthropicProvider("chave-falsa").suggest_clips(FAKE_TRANSCRIPTION, 5, 60, max_clips=1)
+        self.assertEqual(result[0]["title"], "T")
+        self.assertEqual(post.call_args.kwargs["json"]["model"], "claude-haiku-5-5")
+
+    def test_refusal_raises_provider_error(self):
+        from cortai.providers.anthropic import AnthropicProvider
+        from cortai.providers.base import ProviderError
+        with self._post({"stop_reason": "refusal", "content": []}):
+            with self.assertRaises(ProviderError):
+                AnthropicProvider("chave-falsa").suggest_clips(FAKE_TRANSCRIPTION, 5, 60, max_clips=1)

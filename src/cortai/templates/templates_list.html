@@ -1,51 +1,84 @@
 {% extends "base.html" %}
 
 {% block title %}
-Templates de Canal - Cortaí
+Templates — Cortaí
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Templates de Canal</h4>
-                <a href="{{ url_for('templates_new') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus me-1"></i>Novo Template
-                </a>
-            </div>
-            <div class="card-body">
-                {% if templates %}
-                <div class="list-group">
-                    {% for tpl in templates %}
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ tpl.name }}</strong>
-                                <div class="text-muted small">
-                                    layout: {{ tpl.config.layout }} &middot;
-                                    legenda: {{ tpl.config.caption_preset }} &middot;
-                                    watermark: {{ 'ativo' if tpl.config.watermark.enabled else 'desativado' }}
-                                    {% if tpl.config.title %} &middot; título: "{{ tpl.config.title }}"{% endif %}
-                                    {% if tpl.config.cta %} &middot; CTA: "{{ tpl.config.cta }}"{% endif %}
-                                </div>
-                            </div>
-                            <div>
-                                <a href="{{ url_for('templates_edit', template_id=tpl.id) }}" class="btn btn-outline-secondary btn-sm">Editar</a>
-                                <form method="POST" action="{{ url_for('templates_delete', template_id=tpl.id) }}" class="d-inline"
-                                      onsubmit="return confirm('Remover o template {{ tpl.name }}?');">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">Remover</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="text-muted">Nenhum template criado ainda. Crie um para reutilizar layout, legenda e marca d'água entre vídeos.</p>
-                {% endif %}
-            </div>
+{# Mesmos nomes e desenhos de enquadramento da tela Novo corte (index.html) #}
+{% set layout_info = {
+    'auto': ('Segue o rosto', [8, 9, 14, 14, 7, '#FF6A2B'], [4, 27, 22, 19, 8, '#4A4A54']),
+    'active_speaker': ('Ativo por fala', [2, 8, 12, 12, 6, '#FF6A2B'], [16, 26, 12, 12, 6, '#4A4A54']),
+    'card_frame': ('Card social', [3, 16, 24, 15, 3, '#FF6A2B'], [3, 9, 16, 3, 2, '#4A4A54']),
+    'header_footer_frame': ('Editorial', [0, 15, 30, 16, 0, '#FF6A2B'], [0, 0, 30, 9, 0, '#4A4A54']),
+    'blurred_background': ('Fundo desfocado', [0, 0, 30, 46, 0, '#2E2E35'], [0, 15, 30, 16, 0, '#FF6A2B']),
+    'all_faces': ('Todos os rostos', [3, 4, 24, 18, 4, '#FF6A2B'], [3, 24, 24, 18, 4, '#FF6A2B']),
+    'center': ('Crop central', [6, 0, 18, 46, 0, '#FF6A2B'], None),
+} %}
+{# ponytail: cópia dos rótulos de CAPTION_PRESETS_METADATA (a rota não os envia); chave desconhecida aparece crua #}
+{% set preset_labels = {
+    'progressive-word-highlight': 'Karaoke Destaque',
+    'white-bold': 'Branco Bold',
+    'yellow-bold': 'Amarelo Bold',
+    'white-yellow-keyword': 'Branco + Amarelo',
+    'white-red-highlight': 'Destaque Vermelho',
+    'cyan-shadow': 'Ciano com Sombra',
+} %}
+<div class="d-flex flex-column gap-4 pt-3 mx-auto" style="max-width: 920px;">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <h1 class="fw-bold mb-1" style="font-size: 2rem; letter-spacing: -0.03em;">Templates</h1>
+            <p class="mb-0 ct-hint" style="font-size: 0.95rem;">Enquadramento, legenda e marca d'água salvos para usar em qualquer corte.</p>
         </div>
+        {% if templates %}<a href="{{ url_for('templates_new') }}" class="btn btn-caju ct-btn"><i class="fas fa-plus" aria-hidden="true"></i>Novo template</a>{% endif %}
     </div>
+
+    {% if templates %}
+    <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+        {% for tpl in templates %}
+        {% set info = layout_info.get(tpl.config.layout, (tpl.config.layout, [6, 0, 18, 46, 0, '#FF6A2B'], None)) %}
+        {% set a, b = info[1], info[2] %}
+        <li class="ct-section d-flex flex-wrap align-items-center gap-3" style="padding: 20px;">
+            <span class="ct-glyph" aria-hidden="true">
+                <span style="left: {{ a[0] }}px; top: {{ a[1] }}px; width: {{ a[2] }}px; height: {{ a[3] }}px; border-radius: {{ a[4] }}px; background: {{ a[5] }};"></span>
+                {% if b %}<span style="left: {{ b[0] }}px; top: {{ b[1] }}px; width: {{ b[2] }}px; height: {{ b[3] }}px; border-radius: {{ b[4] }}px; background: {{ b[5] }};"></span>{% endif %}
+            </span>
+            <div class="flex-grow-1" style="min-width: 0; flex-basis: 260px;">
+                <h2 class="ct-h2 mb-2 text-break" style="font-size: 1.125rem;">{{ tpl.name }}</h2>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="ct-chip ct-chip-muted">{{ info[0] }}</span>
+                    <span class="ct-chip ct-chip-muted">{{ preset_labels.get(tpl.config.caption_preset, tpl.config.caption_preset) }} · {{ tpl.config.caption_font }}</span>
+                    {% if tpl.config.watermark.enabled %}
+                    <span class="ct-chip ct-chip-caju">Marca d'água</span>
+                    {% else %}
+                    <span class="ct-chip ct-chip-muted">Sem marca d'água</span>
+                    {% endif %}
+                    {% if tpl.config.title %}<span class="ct-chip ct-chip-sol text-break">Título: {{ tpl.config.title }}</span>{% endif %}
+                    {% if tpl.config.cta %}<span class="ct-chip ct-chip-sol text-break">CTA: {{ tpl.config.cta }}</span>{% endif %}
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('templates_edit', template_id=tpl.id) }}" class="btn btn-outline-cortai ct-btn" aria-label="Editar {{ tpl.name }}">
+                    <i class="fas fa-pen" aria-hidden="true"></i>Editar
+                </a>
+                <form method="POST" action="{{ url_for('templates_delete', template_id=tpl.id) }}" class="d-inline"
+                      data-name="{{ tpl.name }}" onsubmit="return confirm('Remover o template ' + this.dataset.name + '?');">
+                    <button type="submit" class="btn ct-btn" aria-label="Remover {{ tpl.name }}"
+                            style="color: var(--bs-danger-text-emphasis); border: 1px solid var(--border-dark); border-radius: var(--radius-md);">Remover</button>
+                </form>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <section class="ct-section d-flex flex-column align-items-center text-center gap-3" style="padding: 48px 24px;">
+        <span class="ct-icon-box"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
+        <div>
+            <h2 class="ct-h2 mb-1">Nenhum template ainda</h2>
+            <p class="mb-0 ct-hint" style="font-size: 0.95rem;">Crie um para reutilizar enquadramento, legenda e marca d'água entre vídeos.</p>
+        </div>
+        <a href="{{ url_for('templates_new') }}" class="btn btn-caju ct-btn"><i class="fas fa-plus" aria-hidden="true"></i>Criar template</a>
+    </section>
+    {% endif %}
 </div>
 {% endblock %}

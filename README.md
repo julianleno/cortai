@@ -1,275 +1,290 @@
 <p align="center">
-  <img src="docs/brand/banner.svg" alt="Cortaí — vídeos longos entram, cortes prontos saem" width="100%">
+  <img src="docs/brand/banner.svg" alt="Cortaí: vídeos longos entram, cortes prontos saem" width="100%">
 </p>
 
-# ✂️ Cortaí v1.5.0
+# ✂️ Cortaí
 
-Aplicação **local-first** de alta performance que transforma vídeos longos (do YouTube ou arquivos locais do seu computador) em clipes virais e profissionais — nos formatos **Vertical (9:16)** e **Horizontal (16:9)** — prontos para **YouTube Shorts, TikTok, Instagram Reels e Redes Sociais**.
+Transforme vídeos longos em clipes verticais (9:16) e horizontais (16:9) legendados, prontos para Shorts, TikTok e Reels. O Cortaí roda no seu computador e é gratuito.
 
-Com seleção automática dos melhores momentos via IA, reenquadramento inteligente por detecção de rosto e movimento labial (**Active Speaker Lip-Sync**), legendas estilizadas acentuadas, tratamento de gramática (`TitleCase`), molduras sociais/editoriais e ferramentas visuais de ajuste.
+[![Versão 1.6.0](https://img.shields.io/badge/versão-1.6.0-FF6A2B)](https://github.com/julianleno/cortai/releases)
+[![Licença GPL-3.0](https://img.shields.io/badge/licença-GPL--3.0-blue)](LICENSE)
+[![Testes](https://github.com/julianleno/cortai/actions/workflows/tests.yml/badge.svg)](https://github.com/julianleno/cortai/actions/workflows/tests.yml)
 
-> **Uma ou várias URLs entram. Clipes em HD, legendados, recortados e personalizados saem.**
+<p align="center">
+  <a href="docs/screenshots/assistente-videos.png"><img src="docs/screenshots/assistente-videos.png" alt="Tela Novo corte na etapa 1 de 5, Vídeos: campo para links do YouTube, aba Arquivos do computador e, ao lado, o resumo das escolhas com o botão Gerar cortes" width="49%"></a>
+  <a href="docs/screenshots/processando.png"><img src="docs/screenshots/processando.png" alt="Tela de um projeto em processamento: 45% concluído, etapas Download e Transcrição prontas, botões Pausar e Cancelar, e três clipes com nota, título, gancho e os botões Baixar, Reenquadrar e Legenda" width="49%"></a>
+</p>
 
----
+**Neste README:** [Baixe e use](#baixe-e-use-no-windows) · [Rodar pelo código](#rodar-pelo-código-fonte) · [Como usar](#como-usar) · [Funcionalidades](#funcionalidades) · [IA e privacidade](#ia-e-privacidade) · [Configuração](#configuração) · [Problemas comuns](#problemas-comuns) · [Contribuindo](#contribuindo)
 
-![Cortaí v1.5.0](https://img.shields.io/badge/Version-v1.5.0-FF6A2B?style=for-the-badge&logo=youtube&logoColor=white)
-![Python 3.12](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![FFmpeg](https://img.shields.io/badge/FFmpeg-Accelerated-0078D7?style=for-the-badge&logo=ffmpeg&logoColor=white)
-![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue)
-![Local First](https://img.shields.io/badge/Privacy-100%25_Local_First-10B981?style=for-the-badge&logo=lock&logoColor=white)
+## Baixe e use no Windows
 
----
+Você não precisa instalar o Python nem saber programar.
 
-## 🚀 Principais Funcionalidades da v1.5.0
+1. Baixe o `Cortai.exe` na página de [Releases](https://github.com/julianleno/cortai/releases/latest).
+2. Salve o arquivo numa pasta só dele, por exemplo `Documentos\Cortai`. O Cortaí guarda os clipes e o banco de dados nessa pasta.
+3. Dê duplo clique no `Cortai.exe`. O Cortaí abre numa janela própria, sem navegador.
 
-### 📦 1. Processamento em Lote (Multi-URL & Múltiplos Arquivos)
-- **YouTube Multi-URL**: Cole até 10 URLs do YouTube simultaneamente no formulário inicial (uma por linha).
-- **Upload Local de Múltiplos Arquivos**: Suporte nativo para envio simultâneo de vídeos `.mp4`, `.mkv`, `.mov`, `.avi` e `.webm`.
-- **Painel de Projetos / Lotes (`/projects`)**: Acompanhe o progresso de múltiplos projetos em paralelo com estatísticas, ETAs e cartões organizados.
+O `Cortai.exe` não tem assinatura digital, então o Windows SmartScreen mostra o aviso "O Windows protegeu o computador". Para abrir mesmo assim, clique em **Mais informações** e depois em **Executar assim mesmo**.
 
-### 🎨 2. Identidade Visual Cortaí
-- **Marca "play cortado"**: um botão de play fatiado na diagonal, o corte que dá nome ao projeto. O acento do "í" no logotipo segue o mesmo ângulo.
-- **Paleta**: *Caju* (`#FF6A2B`) como cor principal, *Mar* (`#12B5A6`) e *Sol* (`#FFC93C`) como destaques, sobre fundo *Noite* (`#111113`) ou *Areia* (`#FBF7F2`) no tema claro.
-- **Tipografia**: *Bricolage Grotesque* nos títulos e no logotipo, *DM Sans* no restante da interface.
-- Guia completo e arquivos do logo em [`docs/brand/`](docs/brand/).
+## Rodar pelo código-fonte
 
-### 🔍 3. Ferramenta de Correção de Texto & Dicionário IA Integrada
-- **Correção Automática de Transcrição**: Substitui instantaneamente siglas, marcas e termos falados que o Whisper possa ter grafado errado (ex: corrigindo `"ANAK"` para `"ANAC"`, `"voepas"` para `"VOEPASS"`).
-- **Chips de Atalho com 1 Clique**: Pré-carregados com marcas e termos comuns (`ANAC`, `VOEPASS`, `Cortaí`, `IA`, `YouTube`, `ChatGPT`), além de campo para adicionar termos personalizados.
+Use este caminho no Linux, no macOS ou se você quer mexer no código.
 
-### ⏱️ 4. Progresso Dinâmico Contínuo
-- **Indicador Circular Animado**: Medidor visual fluido que avança continuamente em tempo real sem saltos ou travamentos.
-- **5 Etapas do Pipeline**:
-  1. 📥 `1. Download Mídia`
-  2. 🎙️ `2. Transcrição IA`
-  3. 👤 `3. Lip-Sync & Rosto Ativo`
-  4. 🎨 `4. Legenda & Moldura`
-  5. 🎬 `5. Exportação Clipes`
+### Pré-requisitos
 
-### ⏸️ 5. Controle Total de Execução (Pausar, Retomar, Cancelar)
-- **Controle Operacional**: Botões em tempo real para **Pausar**, **Retomar** e **Cancelar** qualquer processamento.
-- **Remoção Imediata de Cancelados**: Projetos cancelados são totalmente purgados do banco de dados e da tela sem deixar registros.
-- **Purga de Processos Órfãos**: Limpeza automática de tarefas inacabadas ao iniciar o servidor, mantendo a execução 100% limpa.
-
-### ▶️ 6. Player de Prévia HTML5 Embutido
-- Assista aos clipes em alta definição **diretamente no navegador** através do player HTML5 embutido no card antes de realizar o download.
-
-### ✂️ 7. Ajustador Lateral de Enquadramento 9:16
-- Modal interativo com visualização da moldura 9:16 e slider horizontal ($0\%$ a $100\%$) para re-enquadrar manualmente a cena no ponto desejado e re-renderizar sem reprocessar o vídeo inteiro.
-
-### 📐 8. Proporções Personalizadas & Limites de Duração
-- **Vertical (9:16)**: Até 60 segundos (1 minuto) ideal para Shorts, TikTok e Reels.
-- **Horizontal (16:9)**: Até 300 segundos (5 minutos) perfeito para cortes de podcasts e vídeos longos.
-
-### 👤 9. Detecção de Rosto & Active Speaker Lip-Sync
-- **Segue o Rosto**: Enquadramento inteligente centralizado na cabeça do falante.
-- **Ativo por Fala (Lip-Sync)**: Analisa variância de movimento labial (OpenCV YuNet/ONNX) e histogramas de áudio para trocar o enquadramento dinamicamente quando a conversa muda de interlocutor.
-
-### 💬 10. Legendas Estilizadas & Regras de Gramática
-- **6 Presets Visuais**: *Branco caixa-alta*, *Amarelo forte*, *Palavra-chave em amarelo*, *Expressão destacada*, *Ciano com sombra* e *Destaque progressivo Karaokê*.
-- **Capitalização Inteligente (`TitleCase`)**: Mantém conectivos e preposições (`o`, `a`, `de`, `do`, `da`, `e`, `em`, `por`, `com`, `para`, `sem`, `sob`, `sobre`) em minúsculas conforme regras gramaticais.
-- **Vídeos Sem Fala**: Gera automaticamente legendas estáticas de capa para vídeos sem áudio falado.
-
-### 🖼️ 11. Molduras Sociais & Editoriais
-- **Moldura Social Card (`card_frame`)**: Estilo Twitter/Instagram com card flutuante.
-- **Moldura Editorial (`header_footer_frame`)**: Topo com título do canal e rodapé de marca.
-
----
-
-## 📑 Índice
-
-- [Pré-requisitos](#-pré-requisitos)
-- [Instalação](#-instalação)
-- [Como Usar](#-como-usar)
-- [Variáveis de Ambiente](#-variáveis-de-ambiente)
-- [Desenvolvimento & Testes](#️-desenvolvimento--testes)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Histórico de Versões](#️-histórico-de-versões)
-- [Contribuindo](#-contribuindo)
-- [Licença](#-licença)
-
----
-
-## 💻 Pré-requisitos
-
-| Requisito | Descrição | Onde Obter |
+| Requisito | Para que serve | Como instalar |
 |---|---|---|
-| **Windows 10 / 11** *(recomendado)* | Os scripts `start.bat`/`start.ps1` automatizam a instalação no Windows. No **Linux/macOS** a instalação é manual (veja abaixo) | — |
-| **Python 3.12+** | Executa a aplicação e módulos de IA | [python.org](https://www.python.org/downloads/) *(Marque "Add Python to PATH")* |
-| **FFmpeg** (com `ffprobe`) | Responsável pelo processamento de vídeo e áudio | Baixe o build full em [gyan.dev/ffmpeg/builds](https://www.gyan.dev/ffmpeg/builds/) e adicione a pasta `bin` ao PATH. No Linux: `sudo apt install ffmpeg`; no macOS: `brew install ffmpeg` |
+| **Python 3.12+** | Executa o Cortaí | **Windows**: [python.org](https://www.python.org/downloads/) (marque "Add python.exe to PATH"). **Ubuntu/Debian**: `sudo apt install python3 python3-venv`. **macOS**: `brew install python@3.12` |
+| **FFmpeg** (com `ffprobe`) | Processa vídeo e áudio | **Windows**: build "full" em [gyan.dev/ffmpeg/builds](https://www.gyan.dev/ffmpeg/builds/), com a pasta `bin` no PATH. **Ubuntu/Debian**: `sudo apt install ffmpeg`. **macOS**: `brew install ffmpeg` |
+| **Deno** (opcional) | Remove o aviso "No supported JavaScript runtime" do yt-dlp ao baixar do YouTube | **Windows**: `winget install DenoLand.Deno`. **macOS**: `brew install deno`. Outros: [deno.com](https://deno.com/) |
+| **uv** (opcional) | Cria o ambiente e instala as dependências mais rápido | [docs.astral.sh/uv](https://docs.astral.sh/uv/) |
 
-Verifique no terminal se o ambiente está pronto:
+Sem o Deno, o download do YouTube funciona, mas alguns formatos podem faltar ([issue #6](https://github.com/julianleno/cortai/issues/6)).
+
+### Windows
+
 ```powershell
-python --version
-ffmpeg -version
-ffprobe -version
+git clone https://github.com/julianleno/cortai.git
+cd cortai
 ```
 
----
+Depois, dê duplo clique em **`start.bat`**. O Cortaí abre numa janela própria. Para usar o navegador, defina `CORTAI_JANELA=0` e abra **http://127.0.0.1:5000**.
 
-## 📥 Instalação
-
-### Windows (inicializador automático)
-
-1. **Clone o repositório**:
-   ```powershell
-   git clone https://github.com/julianleno/cortai.git
-   cd cortai
-   ```
-2. **Execute o inicializador automático**:
-   Dê duplo clique no arquivo **`start.bat`** ou rode via PowerShell:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File start.ps1
-   ```
-3. O script criará o ambiente virtual `.venv`, instalará todas as dependências e iniciará o servidor local na porta `5000`.
-4. Abra o seu navegador em **`http://127.0.0.1:5000`**.
-
-### Linux / macOS (instalação manual)
+### Linux e macOS
 
 ```bash
 git clone https://github.com/julianleno/cortai.git
 cd cortai
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-python -m cortai.app
+./start.sh
 ```
 
-Depois, abra **http://127.0.0.1:5000** no navegador.
+Depois, abra **http://127.0.0.1:5000** no navegador. Se aparecer `Permission denied`, rode `bash start.sh`.
 
----
+### O que os inicializadores fazem
 
-## 🎯 Como Usar
+`start.bat`, `start.ps1` e `start.sh` seguem os mesmos passos:
 
-1. **Selecione a Fonte de Entrada**:
-   - Para vídeos do YouTube, cole uma ou mais URLs na caixa de texto.
-   - Para vídeos locais, clique na aba "Arquivo Local" e selecione um ou múltiplos vídeos.
-2. **Configure o Formato & Duração**:
-   - Escolha entre **Vertical 9:16 (até 1 min)** ou **Horizontal 16:9 (até 5 min)**.
-   - Defina a quantidade de clipes desejada (1 a 10).
-3. **Ajuste o Estilo Visual & Legendas**:
-   - Selecione um dos 6 estilos visuais de legenda.
-   - Escolha o modo de capitalização (**UPPERCASE** ou **TitleCase**).
-   - Ative termos no **Dicionário IA Integrado** para correção de nomes próprios.
-4. **Inicie o Processamento**:
-   - Acompanhe o progresso dinâmico por etapas ou use os botões **Pausar**, **Retomar** ou **Cancelar**.
-5. **Prévia & Download**:
-   - Assista aos vídeos no player HTML5 embutido, ajuste o enquadramento lateral com o botão **Ajustar Crop** se desejar, e baixe o clipe pronto em HD.
+1. Conferem o Python, o FFmpeg e o `ffprobe`, e mostram como instalar o que falta.
+2. Copiam `.env.example` para `.env`, se o `.env` não existe.
+3. Criam o ambiente virtual `.venv` e instalam o Cortaí nele.
+4. Conferem se a porta do `FLASK_PORT` (padrão `5000`) está livre.
+5. Iniciam o Cortaí.
 
----
+Nas próximas vezes, rode o mesmo inicializador para abrir o Cortaí.
 
-## 🔑 Variáveis de Ambiente
+## Primeira abertura
 
-Copie o arquivo de exemplo e ajuste o que precisar:
+Na primeira vez, o Cortaí mostra a tela **Preparando o Cortaí**. Ela confere se o FFmpeg está instalado e, no Windows, oferece instalar uma versão portátil na pasta do app com um clique. Depois, ela baixa o modelo de transcrição do Whisper e mostra uma barra de progresso.
 
-```bash
-cp .env.example .env        # Windows: copy .env.example .env
-```
+## Como usar
+
+A tela **Novo corte** é um assistente de 5 etapas. O resumo ao lado mostra suas escolhas, e o botão **Gerar cortes** funciona em qualquer etapa: as etapas seguintes já vêm com escolhas prontas.
+
+1. **Vídeos**: cole até 10 links do YouTube, um por linha. Ou envie vários arquivos `.mp4`, `.mkv`, `.mov`, `.avi` e `.webm`. Se tiver um template do canal, escolha aqui.
+2. **Formato**: **Vertical 9:16** (até 60 s) ou **Horizontal 16:9** (até 5 min).
+3. **Enquadramento**: escolha como o Cortaí posiciona a pessoa no quadro.
+4. **Legenda**: escolha o estilo, a fonte e a capitalização.
+5. **Ajustes**: quantidade de clipes (1 a 10), duração mínima e máxima, idioma da fala e vocabulário.
+
+<p align="center">
+  <a href="docs/screenshots/assistente-legenda.png"><img src="docs/screenshots/assistente-legenda.png" alt="Etapa 4 de 5, Legenda: seletor de fonte, opção CAIXA-ALTA ou Título Gramatical e os 13 estilos de legenda com prévia" width="80%"></a>
+</p>
+
+Cada vídeo vira um projeto. A tela **Projetos** mostra o andamento de todos, com **Pausar**, **Retomar** e **Cancelar**.
+
+<p align="center">
+  <a href="docs/screenshots/projetos.png"><img src="docs/screenshots/projetos.png" alt="Tela Projetos com sete projetos nos estados Cancelado, Na fila, Parcial, Falhou, Concluído, Pausado e Processando, cada um com o botão Ver clipes" width="80%"></a>
+</p>
+
+Na página do projeto, cada clipe pronto tem estes botões:
+
+- **Baixar**: salva o clipe no computador.
+- **Reenquadrar**: move o corte 9:16 para a esquerda ou para a direita com um controle deslizante. O Cortaí gera só esse clipe de novo.
+- **Legenda**: abre o editor. Corrija o texto palavra por palavra ou troque a fonte, e o Cortaí gera o clipe de novo.
+
+Para repetir as mesmas escolhas em outros vídeos, crie um template na tela **Templates**. Um template guarda enquadramento, legenda, marca d'água e vocabulário.
+
+## Funcionalidades
+
+- **Vídeos em lote**: até 10 links do YouTube ou vários arquivos do computador por vez.
+- **Escolha dos trechos**: uma IA na nuvem (Gemini, OpenAI, Anthropic ou NVIDIA NIM) ou o motor local, sem nuvem. Cada clipe recebe nota, título e gancho, que você copia com um clique.
+- **Formatos**: vertical 9:16 (até 60 s) ou horizontal 16:9 (até 5 min).
+- **6 enquadramentos**: *Segue o rosto*, *Ativo por fala* (troca de rosto pela voz e pelo movimento dos lábios), *Card social*, *Editorial* (título no topo, marca embaixo), *Fundo desfocado* e *Crop central*.
+- **13 estilos de legenda**: Karaoke Destaque, Branco Bold, Amarelo Bold, Branco + Amarelo, Destaque Vermelho, Ciano com Sombra, Caixa Branca, Sombra 3D, Palavra da Vez, Neon, Marca-texto, Caixa Escura e Editorial Serifa.
+- **9 fontes**: Arial, Montserrat, Impact, Anton, Bebas Neue, Poppins, Inter, Outfit e Roboto.
+- **Capitalização**: CAIXA-ALTA ou Título Gramatical (conectivos como `de`, `da` e `para` ficam em minúsculas).
+- **Vocabulário**: informe nomes e siglas, por exemplo `ANAC, VOEPASS`, e a legenda corrige o que a transcrição errar.
+- **Editor de legenda**: corrija palavra por palavra e gere o clipe de novo.
+- **Reenquadrar**: ajuste a posição do corte 9:16 sem processar o vídeo inteiro de novo.
+- **Templates do canal**: enquadramento, legenda, marca d'água (posição e opacidade) e vocabulário salvos com um nome.
+- **Controle do processamento**: progresso em 5 etapas (Download, Transcrição, Rosto ativo, Legenda e moldura, Exportação), com Pausar, Retomar e Cancelar.
+- **Idioma da fala**: detecção automática, português, inglês ou espanhol.
+- **Aviso de versão nova**: o Cortaí mostra as novidades e, no `Cortai.exe`, atualiza com um clique.
+
+## IA e privacidade
+
+### O que roda no seu computador
+
+O download, a transcrição (faster-whisper), o enquadramento, a legenda e a exportação rodam no seu computador. Os vídeos nunca saem dele.
+
+### O que vai para a nuvem
+
+Sem chave de IA, nada vai para a nuvem: o motor local escolhe os trechos pela transcrição e pelo áudio.
+
+Com uma chave, o Cortaí envia **só o texto da transcrição, com os tempos de cada trecho**, para o provedor escolhido. A IA devolve os trechos sugeridos.
+
+| Provedor | Variável da chave | Modelo padrão |
+|---|---|---|
+| Google Gemini | `GEMINI_API_KEY` | `gemini-flash-latest` (mude com `GEMINI_MODEL`) |
+| OpenAI | `OPENAI_API_KEY` | `gpt-4o-mini` |
+| Anthropic | `ANTHROPIC_API_KEY` | `claude-haiku-5-5` |
+| NVIDIA NIM | `NVIDIA_NIM_API_KEY` | `meta/llama-3.1-8b-instruct` (mude com `NVIDIA_NIM_MODEL`) |
+
+Com mais de uma chave, o Cortaí tenta nesta ordem: Gemini, OpenAI, Anthropic e NVIDIA NIM. Se todos falham, ele usa o motor local.
+
+### Checagem de atualização
+
+Uma vez por dia, o Cortaí consulta a última release pública do Cortaí no GitHub. Nada seu é enviado nessa consulta. Quando há versão nova, ele mostra um aviso com as novidades. No `Cortai.exe`, o botão **Atualizar agora** baixa a versão nova e reabre o app. Pelo código-fonte, rode `git pull`. Para desligar a checagem, defina `CORTAI_CHECAR_ATUALIZACAO=0`.
+
+<p align="center">
+  <a href="docs/screenshots/versao-nova.png"><img src="docs/screenshots/versao-nova.png" alt="Aviso de versão nova: faixa no topo e janela com o título Versão 1.7.0 disponível, a lista de novidades e correções, e os botões Depois e Atualizar agora" width="80%"></a>
+</p>
+
+## Configuração
+
+### Tela Configurações
+
+Na tela **Configurações** você define:
+
+- **Chaves de API** dos provedores de IA. As chaves salvas ali têm prioridade sobre o `.env` e ficam só no seu computador.
+- **Navegador de onde pegar os cookies**, usado quando o YouTube pede login. O modo Automático tenta Chrome, Edge, Firefox, Brave e Opera.
+
+### Arquivo `.env`
+
+O inicializador cria o `.env` a partir do `.env.example`. Para criar à mão, rode `cp .env.example .env` (no Windows: `copy .env.example .env`).
 
 | Variável | Padrão | Para que serve |
 |---|---|---|
-| `FLASK_HOST` / `FLASK_PORT` | `127.0.0.1` / `5000` | Endereço do servidor local. Mantenha `127.0.0.1` para não expor o app na rede. |
-| `WHISPER_MODEL_SIZE` | `base` | Modelo do faster-whisper (`tiny`, `base`, `small`, `medium`, `large-v3`). |
-| `WHISPER_DEVICE` / `WHISPER_COMPUTE_TYPE` | `cpu` / `int8` | Use `cuda` / `float16` se tiver GPU NVIDIA. |
-| `OUTPUT_DIR` / `TEMP_DIR` / `DB_PATH` | `./storage/...` | Onde ficam os clipes, arquivos temporários e o banco SQLite. |
-| `GEMINI_API_KEY`, `NVIDIA_NIM_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` | *(vazio)* | **Opcionais.** Ativam a seleção de clipes por IA na nuvem. Também podem ser configuradas na tela **/settings**. |
+| `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `NVIDIA_NIM_API_KEY` | vazio | Chaves dos provedores de IA. Veja [IA e privacidade](#ia-e-privacidade). |
+| `GEMINI_MODEL` / `NVIDIA_NIM_MODEL` | `gemini-flash-latest` / `meta/llama-3.1-8b-instruct` | Modelo de cada provedor. |
+| `WHISPER_MODEL_SIZE` | `base` | Modelo de transcrição: `tiny`, `base`, `small`, `medium` ou `large-v3`. |
+| `WHISPER_DEVICE` / `WHISPER_COMPUTE_TYPE` | `cpu` / `int8` | Com GPU NVIDIA, use `cuda` / `float16`. |
+| `FFMPEG_THREADS` | `0` | Threads do FFmpeg. `0` deixa o FFmpeg decidir. |
+| `YTDLP_FORMAT` / `YTDLP_OUTDIR` | MP4 / `./storage/downloads` | Formato e pasta dos downloads do YouTube. |
+| `OUTPUT_DIR` / `TEMP_DIR` | `./storage/output` / `./storage/temp` | Pasta dos clipes e pasta dos arquivos temporários. |
+| `DB_PATH` | `./storage/cortai.db` | Banco SQLite com projetos, clipes, templates e configurações. |
+| `WATERMARK_IMAGE` | `./assets/watermark.png` | Imagem padrão da marca d'água dos templates. |
+| `FLASK_HOST` / `FLASK_PORT` | `127.0.0.1` / `5000` | Endereço do servidor local. Mantenha `127.0.0.1` para não expor o Cortaí na rede. |
+| `FLASK_DEBUG` | `False` | Modo de depuração do Flask. |
+| `CORTAI_JANELA` | `1` | No Windows, `0` troca a janela própria pelo navegador. |
+| `CORTAI_CHECAR_ATUALIZACAO` | `1` | `0` desliga a checagem de versão nova. |
 
-> Sem nenhuma chave de API, o Cortaí funciona **100% local**, com o motor próprio de seleção e categorização de trechos.
+## Problemas comuns
 
----
+**"FFmpeg não encontrado"**
+Instale o FFmpeg com o `ffprobe` e coloque a pasta `bin` no PATH (veja [Pré-requisitos](#pré-requisitos)). Depois, feche e abra o terminal e rode `ffmpeg -version` para conferir.
 
-## 🛠️ Desenvolvimento & Testes
+**O Windows bloqueia o `Cortai.exe`**
+O SmartScreen avisa porque o executável não tem assinatura digital. Clique em **Mais informações** e depois em **Executar assim mesmo**.
 
-Instale as dependências de desenvolvimento e rode a suíte de testes:
+**O primeiro clipe demora**
+Na primeira transcrição, o Cortaí baixa o modelo do Whisper definido em `WHISPER_MODEL_SIZE`. As próximas transcrições usam o modelo já baixado.
+
+**O YouTube pede login ou "Sign in to confirm you're not a bot"**
+Entre no YouTube por um navegador do computador. Na tela **Configurações**, escolha esse navegador em **Navegador de onde pegar os cookies**.
+
+**Os créditos da IA acabaram**
+Quando o provedor falha, o Cortaí tenta o próximo provedor com chave e, por último, o motor local. Os clipes saem mesmo assim, escolhidos pelo motor local.
+
+**"Segue o rosto" perde a pessoa**
+O enquadramento *Segue o rosto* fica fixo durante todo o clipe. Em vídeos que alternam close e plano aberto, ele erra ([issue #2](https://github.com/julianleno/cortai/issues/2)). Use *Ativo por fala* ou ajuste com **Reenquadrar**.
+
+## Contribuindo
+
+Contribuições são bem-vindas. Leia o [guia de contribuição](CONTRIBUTING.md) e o [Código de Conduta](CODE_OF_CONDUCT.md). Para relatar uma falha de segurança, siga o [SECURITY.md](SECURITY.md). As decisões de arquitetura estão em [DECISIONS.md](DECISIONS.md).
+
+Para começar, escolha uma das [issues marcadas como good first issue](https://github.com/julianleno/cortai/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) (#3 a #7).
+
+### Rodar os testes
+
+O pytest fica em `[tool.uv] dev-dependencies` no `pyproject.toml`. Instale o pytest no `.venv` e rode a suíte:
 
 ```bash
-pip install -e . pytest black flake8 mypy
-python -m pytest tests/ -v
+# Linux/macOS
+.venv/bin/python -m pip install pytest
+.venv/bin/python -m pytest
 ```
-
-No Windows, com o ambiente criado pelo `start.ps1`:
 
 ```powershell
-.venv\Scripts\python -m pytest tests/ -v
+# Windows
+.venv\Scripts\python -m pip install pytest
+.venv\Scripts\python -m pytest
 ```
 
-Quer contribuir? Leia o **[guia de contribuição](CONTRIBUTING.md)**.
+O `tests/conftest.py` usa um banco temporário, então os testes não mexem nos seus projetos. O GitHub Actions roda a mesma suíte, com FFmpeg, a cada push na `main` e em cada pull request.
 
----
+### Gerar o `Cortai.exe`
 
-## 📁 Estrutura do Projeto
+No Windows, com o `.venv` ativo, rode:
 
-```
-cortai/
-├── src/cortai/
-│   ├── app.py               # Servidor Flask, rotas de lote, crop e controle de jobs
-│   ├── core.py              # Renderização de vídeo, recortes 9:16/16:9 e molduras
-│   ├── db.py                # Persistência SQLite, purga de órfãos e exclusão
-│   ├── face_tracking.py     # Lip-Sync e detecção de rosto (YuNet/ONNX)
-│   ├── subtitles.py         # Presets visuais de legenda (.ass) e casing TitleCase
-│   ├── templates.py         # Validação e gerenciamento de templates
-│   ├── clip_selection.py    # Seleção automática de clipes (Gemini / NIM / OpenAI / Anthropic / Local)
-│   ├── transcription.py     # Transcrição local faster-whisper com cache
-│   ├── providers/           # Integrações com provedores de IA
-│   ├── models/              # Modelo YuNet (ONNX) de detecção de rosto
-│   └── templates/           # Interface HTML5 (dashboard, status, projetos, settings)
-├── tests/                   # Testes unitários e de integração (pytest)
-├── DECISIONS.md             # Registros de Decisão de Arquitetura (ADRs)
-├── CONTRIBUTING.md          # Como contribuir
-├── LICENSE                  # Licença GPL-3.0
-├── pyproject.toml           # Configuração do pacote e versão
-└── start.bat / start.ps1    # Inicialização rápida no Windows
+```powershell
+python build_exe.py
 ```
 
----
+O script instala o PyInstaller, se faltar, e salva o executável em `dist\Cortai.exe`.
 
-## 🏷️ Histórico de Versões
+### Publicar uma release
 
-- **v1.5.0 (Atual)**:
-  - Processamento em lote (Multi-URL e multi-arquivo).
-  - Nova identidade visual Cortaí (marca, paleta Caju/Mar/Sol e tipografia).
-  - Tela de carregamento com barra de progresso contínua.
-  - Ferramenta de Correção de Texto & Dicionário IA Integrada.
-  - Controle de Jobs (Pausar, Retomar, Cancelar com remoção instantânea).
-  - Player de prévia de vídeo HTML5 embutido.
-  - Ferramenta de ajuste lateral de enquadramento 9:16.
-  - Suporte a formato horizontal (16:9 até 5 min).
-  - Active Speaker Lip-Sync e molduras sociais/editoriais.
-  - Capitalização `TitleCase` mantendo conectivos em minúsculas.
-- **v1.0.0**: Lançamento inicial local-first com suporte a YouTube 9:16 e Faster-Whisper.
+1. Atualize `version` no `pyproject.toml` e `__version__` em `src/cortai/__init__.py`.
+2. Gere o `Cortai.exe`.
+3. Crie a release no GitHub com a tag `vX.Y.Z`, por exemplo `v1.7.0`.
+4. Anexe o executável com o nome exato `Cortai.exe`. Sem esse arquivo, o botão **Atualizar agora** não funciona.
+5. Publique a release. Rascunhos (draft) não aparecem para os usuários.
 
----
+As notas da release viram o aviso de versão nova dentro do app. Escreva as notas em markdown simples: títulos `##`, listas com `-`, `**negrito**` e `` `código` ``. O aviso não mostra links, imagens nem tabelas.
 
-## 🤝 Contribuindo
+## Histórico de versões
 
-Contribuições são muito bem-vindas! Leia o [CONTRIBUTING.md](CONTRIBUTING.md) e o [Código de Conduta](CODE_OF_CONDUCT.md) antes de abrir uma issue ou um pull request. Para relatar falhas de segurança, siga o [SECURITY.md](SECURITY.md).
+- **v1.6.0**
+  - Tela Novo corte em assistente de 5 etapas, com resumo ao lado.
+  - Visual novo em todas as telas.
+  - 7 estilos de legenda novos, entre eles Palavra da Vez, Marca-texto, Neon e Caixa Escura.
+  - No Windows, abre numa janela própria, com ícone na barra de tarefas.
+  - Aviso de versão nova com as novidades e atualização com um clique no `Cortai.exe`.
+  - `start.sh` para Linux e macOS e `Cortai.exe` nas Releases.
+  - Corrige a transcrição em instalações novas (PyAV 19) e troca o modelo padrão da Anthropic para `claude-haiku-5-5`.
+  - Testes automáticos no GitHub Actions.
+- **v1.5.0**
+  - Vários vídeos por vez (links do YouTube e arquivos) e a tela Projetos.
+  - Identidade visual Cortaí (marca, paleta Caju/Mar/Sol e tipografia, em [`docs/brand/`](docs/brand/)).
+  - Vocabulário para corrigir nomes e siglas na legenda.
+  - Pausar, Retomar e Cancelar.
+  - Prévia dos clipes no app e Reenquadrar para o formato 9:16.
+  - Formato horizontal 16:9 (até 5 min).
+  - Enquadramento Ativo por fala, Card social e Editorial.
+  - Capitalização Título Gramatical.
+- **v1.0.0**: primeira versão, com clipes 9:16 de vídeos do YouTube e transcrição local com faster-whisper.
 
----
+## Uso responsável
 
-## ⚖️ Uso Responsável
+O Cortaí é uma ferramenta de edição. Você responde pelo conteúdo que processa. Use só vídeos que você tem direito de baixar, editar e publicar. Respeite os direitos autorais e os Termos de Serviço das plataformas, incluindo o YouTube.
 
-O Cortaí é uma ferramenta de edição. Você é responsável pelo conteúdo que processa: use apenas vídeos que você tem direito de baixar, editar e publicar, e respeite os direitos autorais e os Termos de Serviço das plataformas (incluindo o YouTube).
+## Créditos
 
----
-
-## 🙏 Créditos
-
-O Cortaí é construído sobre projetos open source incríveis:
+O Cortaí usa estes projetos open source:
 
 - [FFmpeg](https://ffmpeg.org/): processamento de vídeo e áudio
 - [faster-whisper](https://github.com/SYSTRAN/faster-whisper): transcrição local
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp): download de vídeos
 - [OpenCV](https://opencv.org/) e o modelo [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet) (licença MIT): detecção de rosto
-- [Flask](https://flask.palletsprojects.com/): interface web
+- [Flask](https://flask.palletsprojects.com/): interface
+- [pywebview](https://pywebview.flowrl.com/): janela própria no Windows
 
----
+Criado por Julian Leno. Siga [@lenofaz no X](https://x.com/lenofaz).
 
-## 📄 Licença
+## Licença
 
-Distribuído sob a licença **GNU General Public License v3.0**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
-Em resumo: você pode usar, estudar, modificar e redistribuir o Cortaí, inclusive comercialmente, desde que versões modificadas distribuídas também sejam abertas sob a GPL-3.0.
-
----
+O Cortaí é distribuído sob a [GNU General Public License v3.0](LICENSE). Você pode usar, estudar, modificar e redistribuir o Cortaí, inclusive para fins comerciais. Versões modificadas que você distribuir também precisam ser abertas sob a GPL-3.0.
 
 © 2026 Julian Leno e colaboradores do Cortaí.

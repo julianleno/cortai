@@ -19,14 +19,16 @@ def build():
         
     spec_content = """# -*- mode: python ; coding: utf-8 -*-
 import sys
-from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import collect_all, collect_data_files
 
-datas = [('src/cortai/templates', 'cortai/templates'), ('src/cortai/models', 'cortai/models')]
+datas = [('src/cortai/templates', 'cortai/templates'), ('src/cortai/models', 'cortai/models'), ('src/cortai/assets', 'cortai/assets')]
+# Modelo de detecção de voz (silero VAD) usado pela transcrição
+datas += collect_data_files('faster_whisper')
 binaries = []
 hiddenimports = ['cortai', 'flask', 'faster_whisper', 'cv2', 'numpy', 'httpx', 'srt', 'tqdm']
 
 a = Analysis(
-    ['src/cortai/app.py'],
+    ['src/cortai/__main__.py'],
     pathex=['src'],
     binaries=binaries,
     datas=datas,
@@ -51,7 +53,8 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True,
+    console=False,
+    icon='docs/brand/cortai.ico',
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

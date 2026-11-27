@@ -102,7 +102,7 @@ def suggest_clips(transcription: dict, min_duration: float, max_duration: float,
 
     gemini_m = db.get_setting(db_path, "gemini_model", gemini_model or config.GEMINI_MODEL)
     openai_m = db.get_setting(db_path, "openai_model", openai_model or "gpt-4o-mini")
-    anthropic_m = db.get_setting(db_path, "anthropic_model", anthropic_model or "claude-3-5-haiku-20241022")
+    anthropic_m = db.get_setting(db_path, "anthropic_model", anthropic_model or "claude-haiku-5-5")
     nvidia_m = db.get_setting(db_path, "nvidia_nim_model", nvidia_model or config.NVIDIA_NIM_MODEL)
 
     providers = []

@@ -1,105 +1,106 @@
 {% extends "base.html" %}
 
 {% block title %}
-Meus Projetos / Lotes — Cortaí
+Meus Projetos — Cortaí
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold mb-1">Meus Projetos & Lotes de Vídeo</h2>
-        <p class="text-muted mb-0">Acompanhe todos os vídeos em processamento e acesse os clipes prontos.</p>
-    </div>
-    <a href="{{ url_for('index') }}" class="btn btn-caju">
-        <i class="fas fa-plus me-2"></i>Novo Processamento
-    </a>
-</div>
-
-{% if not jobs %}
-<div class="card card-cortai text-center p-5">
-    <div class="my-3">
-        <i class="fas fa-film text-muted fa-3x mb-3"></i>
-        <h5 class="fw-bold">Nenhum projeto encontrado</h5>
-        <p class="text-muted">Você ainda não enviou nenhum vídeo para conversão.</p>
-        <a href="{{ url_for('index') }}" class="btn btn-caju mt-2">Enviar Vídeo Agora</a>
-    </div>
-</div>
-{% else %}
-<div class="row g-4">
-    {% for job in jobs %}
-    <div class="col-md-6 col-lg-4">
-        <div class="card card-cortai h-100 p-3 d-flex flex-column">
-            <!-- Header Badge -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="badge rounded-pill px-3 py-2 
-                    {% if job.status == 'completed' %}bg-success text-white
-                    {% elif job.status == 'partial' %}bg-warning text-dark
-                    {% elif job.status == 'processing' %}bg-warning text-dark
-                    {% elif job.status == 'paused' %}bg-info text-dark
-                    {% elif job.status in ('failed', 'cancelled', 'interrupted') %}bg-danger text-white
-                    {% else %}bg-secondary text-white{% endif %}">
-                    {% if job.status == 'completed' %}<i class="fas fa-check-circle me-1"></i>Concluído
-                    {% elif job.status == 'partial' %}<i class="fas fa-exclamation-circle me-1"></i>Parcial
-                    {% elif job.status == 'processing' %}<i class="fas fa-spinner fa-spin me-1"></i>{{ job.progress }}%
-                    {% elif job.status == 'paused' %}<i class="fas fa-pause me-1"></i>Pausado
-                    {% elif job.status == 'cancelled' %}<i class="fas fa-ban me-1"></i>Cancelado
-                    {% elif job.status == 'failed' %}<i class="fas fa-exclamation-triangle me-1"></i>Falhou
-                    {% elif job.status == 'interrupted' %}<i class="fas fa-plug me-1"></i>Interrompido
-                    {% else %}<i class="fas fa-clock me-1"></i>Na fila{% endif %}
-                </span>
-                <span class="text-muted small">
-                    <i class="fas fa-cut me-1"></i>{{ job.clips|length }} clipe(s)
-                </span>
-            </div>
-
-            <!-- Video Title / Source -->
-            <h6 class="fw-bold mb-2 text-truncate" title="{{ job.url }}">
-                {% if 'file://' in job.url %}
-                <i class="fas fa-file-video text-info me-2"></i>{{ job.url.replace('file://', '') }}
-                {% else %}
-                <i class="fab fa-youtube text-danger me-2"></i>{{ job.url }}
-                {% endif %}
-            </h6>
-
-            <p class="text-muted small mb-3">
-                Duração configurada: {{ job.start_time }}s - {{ job.end_time }}s
+{# status: (rótulo, ícone, estilo do chip) #}
+{% set chips = {
+    'completed': ('Concluído', 'fa-check', 'background: rgba(18, 181, 166, 0.14); color: var(--mar-text);'),
+    'partial': ('Parcial', 'fa-circle-exclamation', ''),
+    'processing': ('Processando', 'fa-spinner fa-spin', ''),
+    'paused': ('Pausado', 'fa-pause', ''),
+    'cancelled': ('Cancelado', 'fa-ban', ''),
+    'failed': ('Falhou', 'fa-triangle-exclamation', ''),
+    'interrupted': ('Interrompido', 'fa-plug', ''),
+} %}
+{% set chip_class = {
+    'partial': 'ct-chip-sol',
+    'processing': 'ct-chip-caju',
+    'cancelled': 'bg-danger-subtle text-danger-emphasis',
+    'failed': 'bg-danger-subtle text-danger-emphasis',
+    'interrupted': 'bg-danger-subtle text-danger-emphasis',
+} %}
+<div class="d-flex flex-column gap-4 pt-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <h1 class="fw-bold mb-1" style="font-size: 2rem; letter-spacing: -0.03em;">Projetos</h1>
+            <p class="mb-0 ct-hint" style="font-size: 0.95rem;">
+                {% if jobs %}{{ jobs|length }} projeto(s). Cada vídeo enviado vira um projeto.{% else %}Cada vídeo enviado vira um projeto.{% endif %}
             </p>
-
-            {% if job.status == 'processing' %}
-            <div class="progress mb-3" style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 10px;">
-                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ job.progress }}%"></div>
-            </div>
-            {% endif %}
-
-            <!-- Footer Link Button & Controls -->
-            <div class="mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center gap-2">
-                <div class="d-flex gap-1">
-                    {% if job.status == 'processing' %}
-                    <form method="POST" action="{{ url_for('pause_job', job_id=job.id) }}" class="d-inline">
-                        <button type="submit" class="btn btn-outline-warning btn-sm py-0 px-2" title="Pausar"><i class="fas fa-pause"></i></button>
-                    </form>
-                    {% elif job.status == 'paused' %}
-                    <form method="POST" action="{{ url_for('resume_job', job_id=job.id) }}" class="d-inline">
-                        <button type="submit" class="btn btn-success btn-sm py-0 px-2" title="Retomar"><i class="fas fa-play"></i></button>
-                    </form>
-                    {% endif %}
-                    {% if job.status in ('queued', 'processing', 'paused') %}
-                    <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline" onsubmit="return confirm('Cancelar este projeto e remover da lista?');">
-                        <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2" title="Cancelar e Remover"><i class="fas fa-stop me-1"></i>Cancelar</button>
-                    </form>
-                    {% else %}
-                    <form method="POST" action="{{ url_for('delete_job_route', job_id=job.id) }}" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este projeto?');">
-                        <button type="submit" class="btn btn-outline-secondary btn-sm py-0 px-2" title="Excluir"><i class="fas fa-trash text-danger"></i></button>
-                    </form>
-                    {% endif %}
-                </div>
-                <a href="{{ url_for('status', job_id=job.id) }}" class="btn btn-outline-cortai btn-sm">
-                    <i class="fas fa-external-link-alt me-1"></i>Ver Clipes
-                </a>
-            </div>
         </div>
+        <a href="{{ url_for('index') }}" class="btn btn-caju ct-btn"><i class="fas fa-plus" aria-hidden="true"></i>Novo corte</a>
     </div>
-    {% endfor %}
+
+    {% if not jobs %}
+    <section class="ct-section text-center py-5">
+        <span class="ct-icon-box mx-auto mb-3"><i class="fas fa-film" aria-hidden="true"></i></span>
+        <h2 class="ct-h2 mb-2">Nenhum projeto ainda</h2>
+        <p class="ct-hint mb-4" style="font-size: 0.95rem;">Envie um vídeo e ele aparece aqui enquanto é processado.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-caju ct-btn">Enviar vídeo</a>
+    </section>
+    {% else %}
+    <div class="row g-4">
+        {% for job in jobs %}
+        {% set label, icon, chip_style = chips.get(job.status, ('Na fila', 'fa-clock', '')) %}
+        {% set is_file = 'file://' in job.url %}
+        <div class="col-md-6 col-xl-4">
+            <article class="ct-clip">
+                <div class="ct-clip-body">
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+                        <span class="ct-chip {{ chip_class.get(job.status, 'ct-chip-muted') }}" style="{{ chip_style }}">
+                            <i class="fas {{ icon }}" aria-hidden="true"></i>{{ label }}
+                        </span>
+                        <span class="ct-hint"><i class="fas fa-scissors me-1" aria-hidden="true"></i>{{ job.clips|length }} clipe(s)</span>
+                    </div>
+
+                    <h2 class="mb-0 fw-bold text-truncate" style="font-size: 1.05rem; line-height: 1.35;" title="{{ job.url }}">
+                        {% if is_file %}
+                        <i class="fas fa-file-video me-2" style="color: var(--text-muted);" aria-hidden="true"></i>{{ job.url.replace('file://', '') }}
+                        {% else %}
+                        <i class="fab fa-youtube me-2" style="color: var(--text-muted);" aria-hidden="true"></i>{{ job.url }}
+                        {% endif %}
+                    </h2>
+
+                    <p class="mb-0 ct-hint">Clipes de {{ job.start_time }} a {{ job.end_time }} s</p>
+
+                    {% if job.status in ('processing', 'paused') %}
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="flex-grow-1" role="progressbar" aria-label="Progresso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ job.progress }}"
+                             style="height: 6px; border-radius: 3px; background: var(--border-dark); overflow: hidden;">
+                            <div style="width: {{ job.progress }}%; height: 100%; border-radius: 3px; background: var(--caju);"></div>
+                        </div>
+                        <span class="fw-bold" style="font-size: 0.875rem;">{{ job.progress }}%</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex flex-wrap gap-2 mt-auto pt-3" style="border-top: 1px solid var(--border-dark);">
+                        <a href="{{ url_for('status', job_id=job.id) }}" class="btn {{ 'btn-caju' if job.status in ('completed', 'partial') else 'btn-outline-cortai' }} ct-btn">Ver clipes</a>
+                        {% if job.status == 'processing' %}
+                        <form method="POST" action="{{ url_for('pause_job', job_id=job.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-outline-cortai ct-btn"><i class="fas fa-pause" aria-hidden="true"></i>Pausar</button>
+                        </form>
+                        {% elif job.status == 'paused' %}
+                        <form method="POST" action="{{ url_for('resume_job', job_id=job.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-outline-cortai ct-btn"><i class="fas fa-play" aria-hidden="true"></i>Retomar</button>
+                        </form>
+                        {% endif %}
+                        {% if job.status in ('queued', 'processing', 'paused') %}
+                        <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline ms-auto" onsubmit="return confirm('Cancelar este projeto? Ele continua no histórico.');">
+                            <button type="submit" class="btn ct-btn text-danger-emphasis" style="border: 1px solid var(--border-dark); border-radius: var(--radius-md);">Cancelar</button>
+                        </form>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('delete_job_route', job_id=job.id) }}" class="d-inline ms-auto" onsubmit="return confirm('Deseja realmente excluir este projeto?');">
+                            <button type="submit" class="btn ct-btn text-danger-emphasis" style="border: 1px solid var(--border-dark); border-radius: var(--radius-md);" aria-label="Excluir projeto" title="Excluir projeto"><i class="fas fa-trash" aria-hidden="true"></i></button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 </div>
-{% endif %}
 {% endblock %}

@@ -787,14 +787,54 @@ def main():
     os.makedirs(config.TEMP_DIR, exist_ok=True)
     os.makedirs(config.YTDLP_OUTDIR, exist_ok=True)
 
+    url = f"http://{config.FLASK_HOST}:{config.FLASK_PORT}"
+    webview = _load_webview()
+    if webview:
+        _run_in_window(webview, url)
+        return
+
     if getattr(sys, 'frozen', False):
         import webbrowser
         def _open_browser():
             time.sleep(1.2)
-            webbrowser.open(f"http://{config.FLASK_HOST}:{config.FLASK_PORT}")
+            webbrowser.open(url)
         threading.Thread(target=_open_browser, daemon=True).start()
 
     app.run(host=config.FLASK_HOST, port=config.FLASK_PORT, debug=config.FLASK_DEBUG)
+
+
+def _load_webview():
+    """Janela própria (pywebview) em vez do navegador. CORTAI_JANELA=0 força o modo servidor."""
+    if os.getenv('CORTAI_JANELA', '1') == '0':
+        return None
+    try:
+        import webview
+    except ImportError:
+        return None
+    return webview
+
+
+def _run_in_window(webview, url: str) -> None:
+    import socket
+
+    server = threading.Thread(
+        target=lambda: app.run(host=config.FLASK_HOST, port=config.FLASK_PORT,
+                               debug=False, use_reloader=False),
+        daemon=True,
+    )
+    server.start()
+    # Espera o servidor aceitar conexões antes de abrir a janela, senão ela mostra erro.
+    deadline = time.time() + 15
+    while time.time() < deadline:
+        try:
+            with socket.create_connection((config.FLASK_HOST, config.FLASK_PORT), timeout=0.5):
+                break
+        except OSError:
+            time.sleep(0.1)
+
+    webview.settings['ALLOW_DOWNLOADS'] = True  # botão "Baixar" dos clipes
+    webview.create_window('Cortaí', url, width=1320, height=880, min_size=(900, 640))
+    webview.start()  # bloqueia até a janela fechar; o servidor (daemon) encerra junto
 
 
 if __name__ == '__main__':

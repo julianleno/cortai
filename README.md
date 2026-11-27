@@ -23,11 +23,11 @@ O Cortaí transforma vídeos longos em cortes verticais (9:16) e horizontais (16
 2. Baixe o projeto e rode o inicializador:
    - **Windows**: dê duplo clique em `start.bat`.
    - **Linux/macOS**: rode `./start.sh` no terminal.
-3. Abra **http://127.0.0.1:5000** no navegador.
+3. No Windows, o Cortaí abre numa janela própria. No Linux e no macOS, abra **http://127.0.0.1:5000** no navegador.
 
 O inicializador cria o ambiente virtual, instala as dependências e inicia o servidor. Nas próximas vezes, rode o mesmo arquivo para abrir o Cortaí.
 
-**No Windows sem instalar o Python:** baixe o `Cortai.exe` na página de [Releases](https://github.com/julianleno/cortai/releases) e dê duplo clique. Ele precisa do FFmpeg instalado e abre o navegador sozinho.
+**No Windows sem instalar o Python:** baixe o `Cortai.exe` na página de [Releases](https://github.com/julianleno/cortai/releases) e dê duplo clique. Ele precisa do FFmpeg instalado e abre numa janela própria, sem navegador.
 
 ---
 

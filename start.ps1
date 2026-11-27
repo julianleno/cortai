@@ -104,8 +104,8 @@ Write-Ok "Porta $portValue disponivel"
 
 Write-Step "Iniciando Cortai"
 Write-Host ""
-Write-Host "Abra http://127.0.0.1:$portValue no navegador." -ForegroundColor Cyan
-Write-Host "Pressione CTRL+C nesta janela para encerrar." -ForegroundColor Cyan
+Write-Host "O Cortai abre numa janela propria. Feche a janela para encerrar." -ForegroundColor Cyan
+Write-Host "Prefere o navegador? Defina CORTAI_JANELA=0 e abra http://127.0.0.1:$portValue" -ForegroundColor Cyan
 Write-Host ""
 
 & $venvPython -m cortai.app

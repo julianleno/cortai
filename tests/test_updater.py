@@ -64,7 +64,7 @@ def test_fetch_latest_le_release_e_asset(monkeypatch):
     monkeypatch.setattr(httpx, "get", get)
     rel = updater.fetch_latest()
     assert rel == {"version": "9.9.9", "url": "https://github.com/julianleno/cortai/releases/tag/v9.9.9",
-                   "asset_url": ASSET_URL, "asset_size": len(EXE_BYTES)}
+                   "asset_url": ASSET_URL, "asset_size": len(EXE_BYTES), "notes": ""}
     headers = get.call_args.kwargs["headers"]
     assert headers["User-Agent"].startswith("Cortai/") and len(headers) == 2  # só identifica o app
     assert get.call_args.kwargs["timeout"] <= 5
@@ -116,12 +116,47 @@ def test_variavel_desliga_checagem(monkeypatch, db_path):
     monkeypatch.setenv("CORTAI_CHECAR_ATUALIZACAO", "0")
     get = mock.Mock(return_value=_response(_release_json()))
     monkeypatch.setattr(httpx, "get", get)
-    thread = mock.Mock()
-    monkeypatch.setattr(updater.threading, "Thread", thread)
+    _thread_sincrona(monkeypatch)
     assert updater.check(db_path) is None
     updater.start_background_check(db_path)
     get.assert_not_called()
-    thread.assert_not_called()
+
+
+def _thread_sincrona(monkeypatch):
+    class Sincrona:
+        def __init__(self, target, **_):
+            self.target = target
+        def start(self):
+            self.target()
+    monkeypatch.setattr(updater.threading, "Thread", Sincrona)
+
+
+def test_limpeza_do_exe_roda_mesmo_com_checagem_desligada(monkeypatch, db_path, tmp_path):
+    monkeypatch.setenv("CORTAI_CHECAR_ATUALIZACAO", "0")
+    monkeypatch.setattr(updater, "can_self_update", lambda: True)
+    monkeypatch.setattr(updater.time, "sleep", lambda _: None)
+    monkeypatch.setattr(updater.sys, "executable", str(tmp_path / "Cortai.exe"))
+    (tmp_path / "Cortai.old.exe").write_bytes(b"MZ")
+    _thread_sincrona(monkeypatch)
+    updater.start_background_check(db_path)
+    assert not (tmp_path / "Cortai.old.exe").exists()
+
+
+def test_novidades_viram_html_seguro():
+    md = "\n".join(["## Novidades", "- **Janela** própria", "- legenda `Neon`", "", "Texto <script>x</script>", "1. um"])
+    html = str(updater.notes_html(md))
+    assert "<h4>Novidades</h4>" in html
+    assert "<ul><li><strong>Janela</strong> própria</li><li>legenda <code>Neon</code></li></ul>" in html
+    assert "<script>" not in html and "&lt;script&gt;" in html
+    assert "<ol><li>um</li></ol>" in html
+    assert str(updater.notes_html(None)) == ""
+
+
+def test_fetch_latest_guarda_as_novidades(monkeypatch):
+    payload = _release_json()
+    payload["body"] = "- Novidade"
+    monkeypatch.setattr(httpx, "get", mock.Mock(return_value=_response(payload)))
+    assert updater.fetch_latest()["notes"] == "- Novidade"
 
 
 # --- banner no HTML ---
@@ -267,3 +302,10 @@ def test_rota_apply_mostra_erro_sem_encerrar(monkeypatch, app_module, exe):
     assert resp.status_code == 500 and "internet" in resp.get_json()["error"]
     timer.assert_not_called()
     assert exe.read_bytes() == b"MZ versao velha"
+
+
+def test_modal_mostra_as_novidades(monkeypatch, app_module):
+    monkeypatch.setattr(updater, "_latest", {"version": "9.9.9", "url": "u", "notes": "- **Legendas** novas"})
+    html = app_module.app.test_client().get("/").get_data(as_text=True)
+    assert 'id="ctUpdateModal"' in html
+    assert "<li><strong>Legendas</strong> novas</li>" in html

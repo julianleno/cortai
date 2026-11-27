@@ -38,7 +38,9 @@ def _ensure_db():
 @app.context_processor
 def _inject_update():
     # Só lê o que a checagem em segundo plano já guardou; nunca consulta a rede no render.
-    return {'update': updater.available(), 'update_self': updater.can_self_update()}
+    update = updater.available()
+    notes = updater.notes_html(update.get('notes')) if update else ''
+    return {'update': update, 'update_self': updater.can_self_update(), 'update_notes': notes}
 
 def _render_kwargs_for_template(template_id, caption_preset_override=None, casing_mode_override=None,
                                 caption_font_override=None, layout_override=None):

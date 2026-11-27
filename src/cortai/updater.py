@@ -6,6 +6,7 @@ Desligue com CORTAI_CHECAR_ATUALIZACAO=0.
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -13,6 +14,7 @@ import time
 from pathlib import Path
 
 import httpx
+from markupsafe import Markup, escape
 
 from . import __version__, db
 
@@ -67,6 +69,7 @@ def fetch_latest() -> dict | None:
             "url": data.get("html_url") or "https://github.com/julianleno/cortai/releases/latest",
             "asset_url": asset["browser_download_url"] if asset else None,
             "asset_size": int(asset["size"]) if asset else None,
+            "notes": str(data.get("body") or "")[:8000],  # novidades da versão (markdown da release)
         }
     except Exception as e:  # rede, JSON, campos faltando
         logger.info("Checagem de atualização falhou: %s", e)
@@ -101,17 +104,17 @@ def available() -> dict | None:
 
 
 def start_background_check(db_path: str) -> None:
-    if not enabled():
-        return
-
     def run():
+        # A limpeza não depende da checagem: quem desligou a checagem também atualiza o .exe.
+        if can_self_update():
+            time.sleep(5)  # dá tempo da versão anterior fechar e soltar o Cortai.old.exe
+            cleanup_orphans(Path(sys.executable).parent)
+        if not enabled():
+            return
         try:
             check(db_path)
         except Exception:
             logger.debug("Checagem de atualização falhou", exc_info=True)
-        if can_self_update():
-            time.sleep(5)  # dá tempo da versão anterior fechar e soltar o Cortai.old.exe
-            cleanup_orphans(Path(sys.executable).parent)
 
     threading.Thread(target=run, name="cortai-updater", daemon=True).start()
 
@@ -176,3 +179,50 @@ def apply_update(release: dict, exe_path: str | None = None, popen=None) -> None
             logger.exception("Falha ao desfazer a troca do executável")
         new.unlink(missing_ok=True)
         raise UpdateError("Não foi possível iniciar a versão nova. O Cortaí continua na versão atual.") from e
+
+
+_INLINE = [
+    (re.compile(r"\*\*(.+?)\*\*"), r"<strong>\1</strong>"),
+    (re.compile(r"`([^`]+)`"), r"<code>\1</code>"),
+]
+
+
+def notes_html(markdown: str | None) -> Markup:
+    """Converte o markdown das novidades (subconjunto: títulos, listas, negrito, código) em HTML.
+
+    Todo o texto é escapado antes; só as tags geradas aqui entram no HTML.
+    """
+    out, list_tag = [], None
+
+    def close_list():
+        nonlocal list_tag
+        if list_tag:
+            out.append(f"</{list_tag}>")
+            list_tag = None
+
+    def inline(text: str) -> str:
+        text = str(escape(text.strip()))
+        for pattern, repl in _INLINE:
+            text = pattern.sub(repl, text)
+        return text
+
+    for line in (markdown or "").splitlines():
+        stripped = line.strip()
+        bullet = re.match(r"^[-*]\s+(.*)", stripped)
+        numbered = re.match(r"^\d+[.)]\s+(.*)", stripped)
+        if bullet or numbered:
+            tag = "ul" if bullet else "ol"
+            if list_tag != tag:
+                close_list()
+                out.append(f"<{tag}>")
+                list_tag = tag
+            out.append(f"<li>{inline((bullet or numbered).group(1))}</li>")
+            continue
+        close_list()
+        heading = re.match(r"^(#{1,6})\s+(.*)", stripped)
+        if heading:
+            out.append(f"<h4>{inline(heading.group(2))}</h4>")
+        elif stripped:
+            out.append(f"<p>{inline(stripped)}</p>")
+    close_list()
+    return Markup("".join(out))

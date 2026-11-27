@@ -87,7 +87,7 @@ Meus Projetos — Cortaí
                         </form>
                         {% endif %}
                         {% if job.status in ('queued', 'processing', 'paused') %}
-                        <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline ms-auto" onsubmit="return confirm('Cancelar este projeto e remover da lista?');">
+                        <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline ms-auto" onsubmit="return confirm('Cancelar este projeto? Ele continua no histórico.');">
                             <button type="submit" class="btn ct-btn text-danger-emphasis" style="border: 1px solid var(--border-dark); border-radius: var(--radius-md);">Cancelar</button>
                         </form>
                         {% else %}

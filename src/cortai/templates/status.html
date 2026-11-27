@@ -29,14 +29,14 @@ Status do Processamento — Cortaí
                 <button type="submit" class="btn btn-outline-cortai ct-btn"><i class="fas fa-pause" aria-hidden="true"></i>Pausar</button>
             </form>
             <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline" onsubmit="return confirm('Deseja realmente cancelar este processamento?');">
-                <button type="submit" class="btn ct-btn" style="color: #FCA5A5; border: 1px solid var(--border-dark); border-radius: var(--radius-md);">Cancelar</button>
+                <button type="submit" class="btn ct-btn text-danger-emphasis" style="border: 1px solid var(--border-dark); border-radius: var(--radius-md);">Cancelar</button>
             </form>
             {% elif job.status == 'paused' %}
             <form method="POST" action="{{ url_for('resume_job', job_id=job.id) }}" class="d-inline">
                 <button type="submit" class="btn btn-caju ct-btn"><i class="fas fa-play" aria-hidden="true"></i>Retomar</button>
             </form>
             <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline" onsubmit="return confirm('Deseja realmente cancelar este processamento?');">
-                <button type="submit" class="btn ct-btn" style="color: #FCA5A5; border: 1px solid var(--border-dark); border-radius: var(--radius-md);">Cancelar</button>
+                <button type="submit" class="btn ct-btn text-danger-emphasis" style="border: 1px solid var(--border-dark); border-radius: var(--radius-md);">Cancelar</button>
             </form>
             {% else %}
             <a href="{{ url_for('index') }}" class="btn btn-caju ct-btn">Novo corte</a>

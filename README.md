@@ -38,7 +38,7 @@ O inicializador cria o ambiente virtual, instala as dependências e inicia o ser
 - **Formatos**: vertical 9:16 (até 60 s) para Shorts, TikTok e Reels, ou horizontal 16:9 (até 5 min) para cortes de podcast. Escolha de 1 a 10 clipes por vídeo e a duração mínima e máxima.
 - **Enquadramento**: *Segue o rosto* (centraliza quem fala), *Ativo por fala* (troca de rosto pelo movimento dos lábios e pelo áudio, com OpenCV YuNet), *Card social*, *Editorial* (título no topo e marca embaixo), *Fundo desfocado* e *Crop central*.
 - **Reenquadrar**: mova o corte 9:16 para a esquerda ou para a direita com um controle deslizante e gere o clipe de novo, sem reprocessar o vídeo inteiro.
-- **Legendas**: 6 estilos (Karaoke Destaque, Branco Bold, Amarelo Bold, Branco + Amarelo, Destaque Vermelho e Ciano com Sombra), 9 fontes e capitalização em CAIXA-ALTA ou título gramatical (conectivos como `de`, `da`, `e`, `para` ficam em minúsculas). Vídeos sem fala recebem uma legenda fixa.
+- **Legendas**: 13 estilos (Karaoke Destaque, Branco Bold, Amarelo Bold, Branco + Amarelo, Destaque Vermelho, Ciano com Sombra, Caixa Branca, Sombra 3D, Palavra da Vez, Neon, Marca-texto, Caixa Escura e Editorial Serifa), 9 fontes e capitalização em CAIXA-ALTA ou título gramatical (conectivos como `de`, `da`, `e`, `para` ficam em minúsculas). Vídeos sem fala recebem uma legenda fixa.
 - **Vocabulário**: informe nomes e siglas (ex.: `ANAC`, `VOEPASS`) para a legenda corrigir o que o Whisper errar. Há atalhos de um clique para termos comuns.
 - **Editor de legenda**: corrija palavra por palavra e troque a fonte de um clipe pronto; o Cortaí gera o clipe de novo.
 - **Templates**: salve enquadramento, estilo e fonte da legenda, capitalização, marca d'água (posição e opacidade) e vocabulário para usar em outros vídeos.
@@ -247,6 +247,8 @@ cortai/
 
 - **v1.6.0 (Atual)**:
   - Visual novo em todas as telas, com cartões de enquadramento e prévia de legenda.
+  - 7 estilos de legenda novos, entre eles Palavra da Vez, Marca-texto, Neon e Caixa Escura.
+  - No Windows, abre numa janela própria, sem navegador.
   - `start.sh` para Linux e macOS e executável Windows (`Cortai.exe`) nas releases.
   - Corrige a transcrição em instalações novas (PyAV 19) e atualiza o modelo padrão da Anthropic.
   - CI com testes a cada mudança.

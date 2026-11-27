@@ -2,6 +2,18 @@
 
 Obrigado pelo interesse em contribuir! 🎬 Toda ajuda é bem-vinda: correção de bugs, novas funcionalidades, melhorias de documentação, traduções e testes.
 
+## Seu primeiro PR
+
+O caminho mais curto para contribuir:
+
+1. Escolha uma [issue marcada como good first issue](https://github.com/julianleno/cortai/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22). Cada uma explica o problema e por onde começar.
+2. Comente na issue que vai pegar, para ninguém trabalhar em dobro.
+3. Faça um fork, crie uma branch a partir da `main` e faça a mudança.
+4. Rode os testes (veja abaixo) e abra o PR com `Closes #número` na descrição. A issue fecha sozinha quando o PR for aceito.
+5. No seu primeiro PR, o mantenedor precisa liberar os testes do GitHub Actions. Isso é normal e não significa nenhum problema.
+
+Se a `main` mudar enquanto o PR está aberto e aparecer conflito, não se preocupe: o mantenedor pode resolver no seu branch, e o seu commit continua com a sua autoria. Quando o PR for aceito, seu nome entra na lista "Quem já contribuiu" do README.
+
 ## Antes de começar
 
 - Leia o [Código de Conduta](CODE_OF_CONDUCT.md). Ao participar, você concorda em segui-lo.
@@ -47,7 +59,7 @@ pip install pytest black flake8 mypy
 
 Copie `.env.example` para `.env` e ajuste o que precisar. Chaves de API são **opcionais**: sem elas, a seleção de clipes roda 100% local.
 
-Para rodar a aplicação: `python -m cortai.app` e abra http://127.0.0.1:5000.
+Para rodar a aplicação: `python -m cortai`. No Windows, ela abre numa janela própria; no Linux e no macOS, ou com `CORTAI_JANELA=0`, abra http://127.0.0.1:5000 no navegador.
 
 ## Rodando os testes
 
@@ -56,6 +68,8 @@ python -m pytest tests/ -v
 ```
 
 Todo PR deve manter a suíte passando. Se você corrigiu um bug, adicione um teste que falharia sem a correção.
+
+Os testes usam um banco temporário (`tests/conftest.py`), então as chaves de IA salvas no seu Cortaí não interferem no resultado.
 
 ## Estilo de código
 

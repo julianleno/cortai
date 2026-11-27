@@ -313,6 +313,13 @@
             color: var(--text-muted);
             font-size: 0.85rem;
         }
+        /* Aviso de atualização */
+        .ct-update { align-items: center; flex-wrap: wrap; background: var(--surface-dark); border-color: rgba(255, 106, 43, 0.35); }
+        .ct-update-icon { color: var(--caju); font-size: 1.2rem; }
+        .ct-update-text { flex: 1 1 260px; min-width: 0; }
+        .ct-update-text code { color: var(--text-main); background: var(--surface-card); padding: 1px 6px; border-radius: 6px; }
+        .ct-update-close { width: 44px; padding: 0; color: var(--text-muted); background: transparent; border: none; border-radius: var(--radius-md); }
+        .ct-update-close:hover { color: var(--text-main); background: var(--surface-card); }
     </style>
 </head>
 <body>
@@ -345,6 +352,53 @@
             </div>
         </div>
     </nav>
+
+    {% if update %}
+    <div class="container pt-4" id="ctUpdate">
+        <div class="ct-note ct-update" role="status">
+            <i class="fas fa-circle-arrow-up ct-update-icon" aria-hidden="true"></i>
+            <div class="ct-update-text">
+                <strong>Versão {{ update.version }} disponível</strong>
+                <span class="ct-hint d-block" id="ctUpdateMsg">{% if update_self %}Você está na {{ app_version }}. O Cortaí baixa a versão nova e reabre sozinho.{% else %}Atualize com <code>git pull</code> e rode o <code>start.bat</code>/<code>start.sh</code> de novo.{% endif %}</span>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                {% if update_self %}
+                <button type="button" class="btn btn-caju ct-btn" id="ctUpdateApply">Atualizar agora</button>
+                {% endif %}
+                <a class="btn btn-outline-cortai ct-btn" href="{{ update.url }}" target="_blank" rel="noopener">Ver novidades</a>
+                <button type="button" class="btn ct-btn ct-update-close" id="ctUpdateClose" aria-label="Dispensar aviso da versão {{ update.version }}"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var box = document.getElementById('ctUpdate'), key = 'cortai_update_dispensada', version = {{ update.version | tojson }};
+            try { if (localStorage.getItem(key) === version) box.remove(); } catch (e) {}
+            document.getElementById('ctUpdateClose').addEventListener('click', function () {
+                try { localStorage.setItem(key, version); } catch (e) {}
+                box.remove();
+            });
+            var btn = document.getElementById('ctUpdateApply'), msg = document.getElementById('ctUpdateMsg');
+            if (!btn) return;
+            btn.addEventListener('click', async function () {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Baixando…';
+                msg.textContent = 'Baixando a versão ' + version + '. Pode levar alguns minutos; o Cortaí reabre sozinho quando terminar.';
+                try {
+                    var r = await fetch({{ url_for('update_apply') | tojson }}, { method: 'POST', headers: { 'X-Cortai': '1' } });
+                    var d = await r.json().catch(function () { return {}; });
+                    if (!r.ok || !d.ok) throw new Error(d.error || 'Não foi possível atualizar.');
+                    btn.textContent = 'Reiniciando…';
+                    msg.textContent = 'Pronto. Fechando esta versão e abrindo a ' + version + '…';
+                } catch (e) {
+                    btn.disabled = false;
+                    btn.textContent = 'Tentar de novo';
+                    msg.textContent = (e.message || 'Não foi possível atualizar.') + ' O Cortaí continua funcionando na versão atual.';
+                }
+            });
+        })();
+    </script>
+    {% endif %}
 
     <div class="container py-4">
         {% with messages = get_flashed_messages(with_categories=true) %}

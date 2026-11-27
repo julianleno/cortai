@@ -29,6 +29,9 @@ O inicializador cria o ambiente virtual, instala as dependências e inicia o ser
 
 **No Windows sem instalar o Python:** baixe o `Cortai.exe` na página de [Releases](https://github.com/julianleno/cortai/releases) e dê duplo clique. Ele precisa do FFmpeg instalado e abre numa janela própria, sem navegador.
 
+### 🔄 12. Aviso de Versão Nova
+- **Atualização sem caça ao link**: Ao abrir, o Cortaí confere (no máximo uma vez por dia) se saiu versão nova no GitHub e mostra um aviso discreto. No `Cortai.exe`, o botão **Atualizar agora** baixa a versão nova e reabre o app; pelo código-fonte, basta `git pull`. Só a versão é consultada, nada seu é enviado. Desligue com `CORTAI_CHECAR_ATUALIZACAO=0`.
+
 ---
 
 ## Funcionalidades
@@ -190,6 +193,7 @@ cp .env.example .env        # Windows: copy .env.example .env
 | `YTDLP_FORMAT` / `YTDLP_OUTDIR` | MP4 / `./storage/downloads` | Formato e pasta dos downloads do YouTube. |
 | `OUTPUT_DIR` / `TEMP_DIR` / `DB_PATH` | `./storage/...` | Onde ficam os clipes, os arquivos temporários e o banco SQLite. |
 | `WATERMARK_IMAGE` | `./assets/watermark.png` | Imagem padrão da marca d'água dos templates. |
+| `CORTAI_CHECAR_ATUALIZACAO` | `1` | Confere uma vez por dia se há versão nova em `api.github.com` (só lê a última release pública; nada do usuário é enviado). Use `0` para desligar. |
 
 ---
 

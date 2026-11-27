@@ -13,6 +13,7 @@ from . import templates as template_config
 from . import clip_selection
 from . import transcription as transcription_module
 from . import vocabulary as vocabulary_module
+from . import updater
 from .config import config
 from .core import download_video, render_clip_from_source
 from .segmentation import flatten_words, slice_transcription
@@ -33,6 +34,11 @@ db.init_db(config.DB_PATH, recover_orphans=True)
 def _ensure_db():
     if app.config.get('TESTING'):
         db.init_db(config.DB_PATH)
+
+@app.context_processor
+def _inject_update():
+    # Só lê o que a checagem em segundo plano já guardou; nunca consulta a rede no render.
+    return {'update': updater.available(), 'update_self': updater.can_self_update()}
 
 def _render_kwargs_for_template(template_id, caption_preset_override=None, casing_mode_override=None,
                                 caption_font_override=None, layout_override=None):
@@ -781,12 +787,30 @@ def settings_route():
     settings_data = db.get_all_settings(config.DB_PATH)
     return render_template('settings.html', settings=settings_data)
 
+@app.route('/update/apply', methods=['POST'])
+def update_apply():
+    if request.headers.get('X-Cortai') != '1':  # barra POST vindo de outro site
+        return jsonify(ok=False, error='Pedido inválido.'), 400
+    release = updater.available()
+    if release is None or not updater.can_self_update():
+        return jsonify(ok=False, error='Não há atualização para instalar por aqui.'), 400
+    try:
+        updater.apply_update(release)
+    except updater.UpdateError as e:
+        return jsonify(ok=False, error=str(e)), 500
+    # A versão nova já foi iniciada; encerra esta depois de responder (fecha a janela junto).
+    threading.Timer(1.0, os._exit, args=(0,)).start()
+    return jsonify(ok=True)
+
 def main():
+    if not app.testing:
+        updater.start_background_check(config.DB_PATH)
     # Ensure directories exist
     os.makedirs(config.OUTPUT_DIR, exist_ok=True)
     os.makedirs(config.TEMP_DIR, exist_ok=True)
     os.makedirs(config.YTDLP_OUTDIR, exist_ok=True)
 
+    _wait_port_free(config.FLASK_HOST, config.FLASK_PORT)
     url = f"http://{config.FLASK_HOST}:{config.FLASK_PORT}"
     webview = _load_webview()
     if webview:
@@ -801,6 +825,19 @@ def main():
         threading.Thread(target=_open_browser, daemon=True).start()
 
     app.run(host=config.FLASK_HOST, port=config.FLASK_PORT, debug=config.FLASK_DEBUG)
+
+
+def _wait_port_free(host: str, port: int, timeout: float = 10.0) -> None:
+    """Logo após uma atualização, a versão antiga ainda segura a porta por ~1 s; espera ela soltar."""
+    import socket
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            with socket.create_connection((host, port), timeout=0.3):
+                pass  # alguém ainda responde na porta
+        except OSError:
+            return
+        time.sleep(0.25)
 
 
 def _load_webview():

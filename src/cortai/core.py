@@ -425,39 +425,56 @@ def crop_to_vertical_active_speaker(input_path: str, output_path: str, transcrip
         use_lip_sync=use_lip_sync,
     )
     logger.info("Active speaker (lip-sync=%s): %d janela(s) de crop", use_lip_sync, len(windows))
+    return crop_to_vertical_windows(input_path, output_path, windows, target_width, target_height)
 
+
+def crop_to_vertical_windows(input_path: str, output_path: str, windows: list[dict],
+                             target_width: int = 1080, target_height: int = 1920) -> str:
+    """Aplica um enquadramento por trecho ([start, end] de cada janela) e junta os trechos.
+    Usado pelo "Ativo por fala" (janelas por falante) e pelo "Segue o rosto" (janelas por cena)."""
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     if len(windows) == 1:
         # No benefit to the cut+concat machinery for a single window.
         return crop_to_vertical(input_path, output_path, target_width, target_height, window=windows[0])
 
-    with tempfile.TemporaryDirectory(prefix="active_speaker_") as temp_dir:
-        segment_paths = []
-        for i, window in enumerate(windows):
-            segment_cut_path = os.path.join(temp_dir, f"seg_{i}_cut.mp4")
-            cut_video_segment(input_path, window["start"], window["end"], segment_cut_path)
+    probe = ffmpeg.probe(input_path)
+    video_info = next(s for s in probe["streams"] if s["codec_type"] == "video")
+    num, den = (int(v) for v in video_info.get("r_frame_rate", "30/1").split("/"))
+    fps = num / den if den else 30.0
+    has_audio = any(s["codec_type"] == "audio" for s in probe["streams"])
 
-            segment_cropped_path = os.path.join(temp_dir, f"seg_{i}_cropped.mp4")
-            crop_to_vertical(segment_cut_path, segment_cropped_path, target_width, target_height, window=window)
-            segment_paths.append(segment_cropped_path)
+    # Fronteiras em número de quadro (trim por quadro não arredonda): o resultado tem exatamente
+    # os quadros do original, e a legenda, sincronizada pelo tempo do original, não escorrega.
+    bounds = [round(w["start"] * fps) for w in windows] + [round(windows[-1]["end"] * fps)]
+    bounds[0], bounds[-1] = 0, 10 ** 9  # o primeiro trecho começa no início e o último vai até o fim
 
-        try:
-            concat_streams = []
-            for segment_path in segment_paths:
-                segment_input = ffmpeg.input(segment_path)
-                concat_streams.append(segment_input.video)
-                concat_streams.append(segment_input.audio)
-            joined = ffmpeg.concat(*concat_streams, v=1, a=1).node
-
-            (
-                ffmpeg
-                .output(joined[0], joined[1], output_path, vcodec='libx264', acodec='aac',
-                       preset='medium', crf=23)
-                .overwrite_output()
-                .run(capture_stdout=True, capture_stderr=True)
-            )
-        except ffmpeg.Error as e:
-            logger.error(f"Error concatenating active-speaker segments: {e.stderr.decode()}")
-            raise
+    source = ffmpeg.input(input_path)
+    pieces = []
+    for i, window in enumerate(windows):
+        first, last = bounds[i], bounds[i + 1]
+        if last <= first:
+            continue
+        pieces.append(
+            source.video
+            .trim(start_frame=first, end_frame=last)
+            .setpts('PTS-STARTPTS')
+            .filter('crop', w=window['width'], h=window['height'], x=window['x'], y=window['y'])
+            .filter('scale', w=target_width, h=target_height)
+            .filter('setsar', 1)
+        )
+    # Só o vídeo vem dos trechos; o áudio vai inteiro do original, sem emendas.
+    video = ffmpeg.concat(*pieces, v=1, a=0)
+    streams = [video, source.audio] if has_audio else [video]
+    try:
+        (
+            ffmpeg
+            .output(*streams, output_path, vcodec='libx264', acodec='aac', preset='medium', crf=23)
+            .overwrite_output()
+            .run(capture_stdout=True, capture_stderr=True)
+        )
+    except ffmpeg.Error as e:
+        logger.error(f"Error concatenating crop segments: {e.stderr.decode()}")
+        raise
 
     return output_path
 
@@ -1056,8 +1073,10 @@ def render_vertical_clip(cut_video: str, final_path: str, temp_dir: str,
     else:
         if layout == "active_speaker":
             logger.warning("layout='active_speaker' pedido sem transcricao disponivel; usando 'auto'.")
-        window = face_tracking.compute_vertical_crop_window(cut_video, target_width, target_height)
-        crop_to_vertical(cut_video, vertical_path, target_width, target_height, window=window)
+        # Um enquadramento por cena; a cena mais longa decide a posição da legenda.
+        windows = face_tracking.compute_scene_crop_windows(cut_video, target_width, target_height)
+        window = max(windows, key=lambda w: w["end"] - w["start"])
+        crop_to_vertical_windows(cut_video, vertical_path, windows, target_width, target_height)
 
     # Step 2: Add title/CTA banners (Fase 6), if requested
     if title or cta:

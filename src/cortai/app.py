@@ -781,7 +781,7 @@ def settings_route():
     settings_data = db.get_all_settings(config.DB_PATH)
     return render_template('settings.html', settings=settings_data)
 
-if __name__ == '__main__':
+def main():
     # Ensure directories exist
     os.makedirs(config.OUTPUT_DIR, exist_ok=True)
     os.makedirs(config.TEMP_DIR, exist_ok=True)
@@ -795,3 +795,7 @@ if __name__ == '__main__':
         threading.Thread(target=_open_browser, daemon=True).start()
 
     app.run(host=config.FLASK_HOST, port=config.FLASK_PORT, debug=config.FLASK_DEBUG)
+
+
+if __name__ == '__main__':
+    main()

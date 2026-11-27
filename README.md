@@ -105,6 +105,18 @@ ffmpeg -version
 ffprobe -version
 ```
 
+**Opcional para baixar do YouTube:** instale o [Deno](https://deno.com/) e deixe
+o executável no PATH. O yt-dlp habilita o Deno por padrão. Sem um runtime
+JavaScript compatível, o download ainda pode funcionar, mas alguns formatos
+podem ficar indisponíveis.
+
+- No Windows: `winget install DenoLand.Deno`
+- No macOS: `brew install deno`
+
+Abra um novo terminal e execute `deno --version` para conferir a instalação.
+Se o aviso persistir ou ainda faltarem formatos, consulte o
+[guia de configuração EJS do yt-dlp](https://github.com/yt-dlp/yt-dlp/wiki/EJS).
+
 ---
 
 ## 📥 Instalação

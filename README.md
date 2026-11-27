@@ -2,7 +2,7 @@
   <img src="docs/brand/banner.svg" alt="Cortaí — vídeos longos entram, cortes prontos saem" width="100%">
 </p>
 
-# ✂️ Cortaí v1.5.0
+# ✂️ Cortaí v1.6.0
 
 O Cortaí transforma vídeos longos em cortes verticais (9:16) e horizontais (16:9) legendados, prontos para Shorts, TikTok e Reels. Tudo roda no seu computador.
 
@@ -11,7 +11,7 @@ O Cortaí transforma vídeos longos em cortes verticais (9:16) e horizontais (16
   <a href="docs/screenshots/processando.png"><img src="docs/screenshots/processando.png" alt="Tela de processamento: progresso em 45% nas cinco etapas, botões Pausar e Cancelar, e clipes com nota, título, gancho e os botões Baixar, Reenquadrar e Legenda" width="49%"></a>
 </p>
 
-![Cortaí v1.5.0](https://img.shields.io/badge/Version-v1.5.0-FF6A2B?style=for-the-badge&logo=youtube&logoColor=white)
+![Cortaí v1.6.0](https://img.shields.io/badge/Version-v1.6.0-FF6A2B?style=for-the-badge&logo=youtube&logoColor=white)
 ![Python 3.12](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![FFmpeg](https://img.shields.io/badge/FFmpeg-Accelerated-0078D7?style=for-the-badge&logo=ffmpeg&logoColor=white)
 ![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue)
@@ -26,6 +26,8 @@ O Cortaí transforma vídeos longos em cortes verticais (9:16) e horizontais (16
 3. Abra **http://127.0.0.1:5000** no navegador.
 
 O inicializador cria o ambiente virtual, instala as dependências e inicia o servidor. Nas próximas vezes, rode o mesmo arquivo para abrir o Cortaí.
+
+**No Windows sem instalar o Python:** baixe o `Cortai.exe` na página de [Releases](https://github.com/julianleno/cortai/releases) e dê duplo clique. Ele precisa do FFmpeg instalado e abre o navegador sozinho.
 
 ---
 
@@ -243,12 +245,17 @@ cortai/
 
 ## Histórico de versões
 
-- **v1.5.0 (Atual)**:
+- **v1.6.0 (Atual)**:
+  - Visual novo em todas as telas, com cartões de enquadramento e prévia de legenda.
+  - `start.sh` para Linux e macOS e executável Windows (`Cortai.exe`) nas releases.
+  - Corrige a transcrição em instalações novas (PyAV 19) e atualiza o modelo padrão da Anthropic.
+  - CI com testes a cada mudança.
+- **v1.5.0**:
   - Processamento em lote (Multi-URL e multi-arquivo).
   - Nova identidade visual Cortaí (marca, paleta Caju/Mar/Sol e tipografia).
   - Tela de carregamento com barra de progresso contínua.
   - Ferramenta de Correção de Texto & Dicionário IA Integrada.
-  - Controle de Jobs (Pausar, Retomar, Cancelar com remoção instantânea).
+  - Controle de Jobs (Pausar, Retomar e Cancelar).
   - Player de prévia de vídeo HTML5 embutido.
   - Ferramenta de ajuste lateral de enquadramento 9:16.
   - Suporte a formato horizontal (16:9 até 5 min).

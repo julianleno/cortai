@@ -166,7 +166,8 @@
         .ct-field { width: 100%; min-height: 48px; padding: 10px 14px; border-radius: 12px; border: 1.5px solid var(--border-dark); background: var(--bg-dark); color: var(--text-main); font: inherit; font-size: 0.95rem; }
         .ct-field:focus { border-color: var(--caju); outline: none; box-shadow: 0 0 0 3px rgba(255, 106, 43, 0.2); }
         .ct-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-        .ct-grid-caps { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+        .ct-grid-caps { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+        .ct-cap-label { padding: 0 2px; font-size: 0.75rem; font-weight: 600; line-height: 1.25; min-height: 2.5em; }
         .ct-opt-input { position: absolute; opacity: 0; pointer-events: none; }
         .ct-opt {
             display: flex; align-items: center; gap: 14px; height: 100%; margin: 0; padding: 14px;
@@ -185,12 +186,12 @@
         .ct-opt-input:checked + .ct-opt .ct-ratio span { border-color: var(--caju); }
         .ct-glyph { position: relative; width: 30px; height: 46px; border-radius: 6px; border: 1.5px solid #4A4A54; overflow: hidden; flex: none; background: var(--bg-dark); }
         .ct-glyph span { position: absolute; display: block; }
-        .ct-opt-col { flex-direction: column; align-items: stretch; gap: 10px; padding: 8px 8px 12px; }
-        .ct-cap { position: relative; height: 140px; border-radius: 10px; background: #0B0B0D; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; padding: 0 8px 16px; }
+        .ct-opt-col { flex-direction: column; align-items: stretch; gap: 8px; padding: 6px 6px 10px; }
+        .ct-cap { position: relative; height: 92px; border-radius: 10px; background: #0B0B0D; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; padding: 0 8px 16px; }
         .ct-cap::before, .ct-cap::after { content: ""; position: absolute; left: 50%; background: #26262C; }
-        .ct-cap::before { top: 20px; width: 44px; height: 44px; margin-left: -22px; border-radius: 50%; }
-        .ct-cap::after { top: 70px; width: 100px; height: 90px; margin-left: -50px; border-radius: 44px 44px 0 0; }
-        .ct-cap-text { position: relative; z-index: 1; text-align: center; line-height: 1.15; font-size: 0.95rem !important; font-family: var(--cap-font, Montserrat), sans-serif !important; }
+        .ct-cap::before { top: 10px; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; }
+        .ct-cap::after { top: 44px; width: 70px; height: 60px; margin-left: -35px; border-radius: 30px 30px 0 0; }
+        .ct-cap-text { position: relative; z-index: 1; text-align: center; line-height: 1.15; font-size: 0.8rem !important; font-family: var(--cap-font, Montserrat), sans-serif !important; }
         .ct-seg { display: flex; padding: 4px; gap: 4px; border-radius: 12px; background: var(--bg-dark); border: 1px solid var(--border-dark); }
         .ct-seg label { flex: 1; min-height: 44px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 9px; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: background-color .15s ease, color .15s ease; }
         .ct-seg input:checked + label { background: var(--border-dark); color: var(--text-main); }
@@ -212,6 +213,24 @@
         .ct-summary dd { margin: 0; font-weight: 600; text-align: right; }
         .ct-note { display: flex; gap: 12px; padding: 16px; border-radius: 16px; background: rgba(18, 181, 166, 0.08); border: 1px solid rgba(18, 181, 166, 0.3); font-size: 0.875rem; line-height: 1.5; }
         @media (min-width: 992px) { .ct-sticky { position: sticky; top: 96px; } }
+
+        /* Assistente da home: uma etapa por vez */
+        .ct-stepper { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        .ct-stepper button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px 0 8px; border-radius: 999px; border: 1px solid var(--border-dark); background: transparent; color: var(--text-muted); font-size: 0.875rem; font-weight: 600; transition: border-color .18s ease, background-color .18s ease, color .18s ease; }
+        .ct-stepper button:not(:disabled):hover { border-color: var(--text-muted); color: var(--text-main); }
+        .ct-stepper button:disabled { cursor: default; opacity: .6; }
+        .ct-stepper button:focus-visible { outline: 2px solid var(--caju); outline-offset: 2px; }
+        .ct-stepper .ct-step { width: 28px; height: 28px; background: var(--surface-card); color: var(--text-muted); }
+        .ct-stepper .fa-check { display: none; font-size: 12px; }
+        .ct-stepper li.is-done .ct-step { background: var(--mar); color: #062320; }
+        .ct-stepper li.is-done .ct-step-num { display: none; }
+        .ct-stepper li.is-done .fa-check { display: inline; }
+        .ct-stepper li.is-active button { border-color: var(--caju); background: rgba(255, 106, 43, 0.08); color: var(--text-main); }
+        .ct-stepper li.is-active .ct-step { background: var(--caju); color: var(--tinta); }
+        .ct-wizard .ct-pane { min-height: 380px; animation: ctIn .24s cubic-bezier(.2, .8, .2, 1); }
+        .ct-wizard .ct-pane h2:focus { outline: none; }
+        .ct-wizard-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-dark); }
+        .ct-wizard-nav .btn:disabled { visibility: hidden; }
 
         /* Progresso por etapas */
         :root { --mar-text: #5EEAD4; }
@@ -251,6 +270,7 @@
         @keyframes ctPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 106, 43, .45); } 50% { box-shadow: 0 0 0 6px rgba(255, 106, 43, 0); } }
         @keyframes ctBreath { from { opacity: .7; } to { opacity: 1; } }
         @media (prefers-reduced-motion: reduce) {
+            .ct-wizard .ct-pane { animation: none; }
             .ct-opt, .ct-clip, .ct-drop, .ct-seg label, .ct-stage-bar::after { transition: none; }
             .ct-shimmer, .ct-stage.active .ct-dot, .ct-stage.active .ct-stage-bar::after, .ct-adv[open] > .ct-adv-body { animation: none; }
         }
@@ -288,7 +308,7 @@
 
         footer {
             margin-top: auto;
-            padding: 2rem 0;
+            padding: 0.75rem 0;
             border-top: 1px solid var(--border-dark);
             color: var(--text-muted);
             font-size: 0.85rem;
@@ -343,16 +363,12 @@
     </div>
 
     <footer>
-        <div class="container text-center">
-            <p class="mb-1">&copy; {{ now().year }} Cortaí <strong>v{{ app_version or '1.6.0' }}</strong> — Inteligência Artificial de Cortes de Vídeo.</p>
-            <small class="text-muted">Software livre (GPL-3.0) com processamento local-first.</small>
-            <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mt-3">
-                <span>Feito por Julian Leno</span>
-                <a href="https://x.com/lenofaz" target="_blank" rel="noopener" class="btn btn-outline-cortai ct-btn">
-                    <i class="fab fa-x-twitter" aria-hidden="true"></i>Seguir @lenofaz
-                    <span class="visually-hidden">no X (abre em nova janela)</span>
-                </a>
-            </div>
+        <div class="container d-flex flex-wrap align-items-center justify-content-center gap-3 text-center">
+            <span>&copy; {{ now().year }} Cortaí <strong>v{{ app_version or '1.6.0' }}</strong> · software livre (GPL-3.0) · feito por Julian Leno</span>
+            <a href="https://x.com/lenofaz" target="_blank" rel="noopener" class="btn btn-outline-cortai ct-btn">
+                <i class="fab fa-x-twitter" aria-hidden="true"></i>Seguir @lenofaz
+                <span class="visually-hidden">no X (abre em nova janela)</span>
+            </a>
         </div>
     </footer>
 

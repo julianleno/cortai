@@ -61,10 +61,11 @@ def test_ffmpeg_local_entra_no_path(monkeypatch, tmp_path):
     pasta.mkdir(parents=True)
     for nome in preparo.FFMPEG_EXES:
         (pasta / nome).write_bytes(b"MZ")
-    monkeypatch.setenv("PATH", "C:\\outro")
+    outro = str(tmp_path / "outro")  # caminho sem ':' para valer no Windows e no Linux
+    monkeypatch.setenv("PATH", outro)
     preparo.activate_local_ffmpeg()
     preparo.activate_local_ffmpeg()  # não duplica
-    assert os.environ["PATH"].split(os.pathsep) == [str(pasta), "C:\\outro"]
+    assert os.environ["PATH"].split(os.pathsep) == [str(pasta), outro]
 
 
 def test_instala_ffmpeg_portatil(monkeypatch, tmp_path):

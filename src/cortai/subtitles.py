@@ -26,6 +26,21 @@ sociais, sem copiar a identidade visual de nenhum produto especifico):
 A "palavra-chave"/"expressao destacada" dos presets 3 e 4 e escolhida por
 uma heuristica determinista (a palavra mais longa do trecho) -- nao ha
 extracao de palavra-chave por NLP/IA nesta fase.
+
+Presets trazidos dos modelos de legenda do Editor do Futuro e do realfx:
+
+7. white-box        -- texto escuro numa caixa branca por linha
+8. shadow-3d        -- italico branco com sombra dura amarela deslocada
+9. spoken-word-pop  -- a palavra falada fica amarela e 12% maior
+10. neon-glow       -- letra branca com brilho rosa em volta (\\blur no contorno)
+11. highlighter-box -- a palavra falada ganha uma caixa amarela (marca-texto)
+12. dark-box        -- caixa escura por linha; a palavra falada fica amarela
+13. editorial-serif -- a palavra falada vira Georgia italica vermelha
+
+"active_word" emite um evento por palavra (do inicio dela ao inicio da
+proxima) com essa palavra envolvida em highlight_open/close. A caixa atras
+de uma unica palavra usa um segundo Style ("Highlight", BorderStyle 3)
+trocado inline com \\rHighlight -- o libass aplica o BorderStyle por glifo.
 """
 import logging
 import os
@@ -84,10 +99,13 @@ class CaptionPreset:
     back_color: str = _BLACK
     outline_width: float = 3.0
     shadow_depth: float = 1.0
-    border_style: int = 1  # 1 = outline+shadow (opaque box is style-wide, not per-word)
-    highlight_mode: str | None = None  # None | "keyword_color" | "expression_highlight" | "karaoke"
+    border_style: int = 1  # 1 = outline+shadow; 3 = opaque box (OutlineColour) per line
+    italic: bool = False
+    highlight_mode: str | None = None  # None | "keyword_color" | "expression_highlight" | "karaoke" | "active_word"
     highlight_open: str = ""
     highlight_close: str = ""
+    event_prefix: str = ""  # override tags at the start of every event (e.g. {\blur} for a glow)
+    highlight_style: dict | None = None  # fields overriding a copy of this preset as the "Highlight" Style
 
 
 CAPTION_PRESETS: dict[str, CaptionPreset] = {
@@ -121,6 +139,44 @@ CAPTION_PRESETS: dict[str, CaptionPreset] = {
         name="progressive-word-highlight", primary_color=_YELLOW, secondary_color=_WHITE,
         outline_color=_BLACK, outline_width=2.0, shadow_depth=1.0,
         highlight_mode="karaoke",
+    ),
+    # --- Editor do Futuro (legenda-modelos.ps1); a cor de destaque padrao dele e #FFD60A ---
+    "white-box": CaptionPreset(
+        name="white-box", primary_color="&H00141414", outline_color=_WHITE,
+        border_style=3, outline_width=14.0, shadow_depth=0.0,
+    ),
+    "shadow-3d": CaptionPreset(
+        name="shadow-3d", italic=True, primary_color=_WHITE, back_color="&H000AD6FF",
+        outline_width=0.0, shadow_depth=5.0,
+    ),
+    "spoken-word-pop": CaptionPreset(
+        name="spoken-word-pop", primary_color=_WHITE, outline_color=_BLACK, back_color="&H80000000",
+        outline_width=3.5, shadow_depth=2.5,
+        highlight_mode="active_word",
+        highlight_open="{\\c&H0AD6FF&\\fscx112\\fscy112}", highlight_close="{\\r}",
+    ),
+    "neon-glow": CaptionPreset(
+        name="neon-glow", primary_color=_WHITE, outline_color="&H00882EFF",
+        outline_width=6.0, shadow_depth=0.0, event_prefix="{\\blur10}",
+    ),
+    # --- realfx (services/render.js) ---
+    "highlighter-box": CaptionPreset(
+        name="highlighter-box", primary_color=_WHITE, back_color="&H40000000",
+        outline_width=0.0, shadow_depth=3.0,
+        highlight_mode="active_word", highlight_open="{\\rHighlight}", highlight_close="{\\r}",
+        highlight_style={"primary_color": "&H00171717", "outline_color": "&H004ADCF8",
+                         "border_style": 3, "outline_width": 8.0, "shadow_depth": 0.0},
+    ),
+    "dark-box": CaptionPreset(
+        name="dark-box", primary_color=_WHITE, outline_color="&H0013100E",
+        border_style=3, outline_width=14.0, shadow_depth=0.0,
+        highlight_mode="active_word", highlight_open="{\\c&H4CCAF9&}", highlight_close="{\\r}",
+    ),
+    "editorial-serif": CaptionPreset(
+        name="editorial-serif", primary_color=_WHITE, back_color="&H40000000",
+        outline_width=0.0, shadow_depth=3.0,
+        highlight_mode="active_word",
+        highlight_open="{\\fnGeorgia\\b1\\i1\\c&H3335EC&}", highlight_close="{\\r}",
     ),
 }
 
@@ -160,6 +216,48 @@ CAPTION_PRESETS_METADATA = {
         "sample": "CIANO COM SOMBRA PRETA",
         "css": "font-family: Arial, sans-serif; font-weight: 900; color: #00ffff; text-shadow: 2px 2px 0px #000000; font-size: 0.85rem;",
         "description": "Estilo gamer / moderno em ciano",
+    },
+    "white-box": {
+        "label": "Caixa Branca",
+        "sample": "TEXTO NA CAIXA BRANCA",
+        "css": "font-weight: 900; color: #141414; background: #ffffff; padding: 1px 6px; -webkit-box-decoration-break: clone; box-decoration-break: clone;",
+        "description": "Texto escuro numa caixa branca por linha",
+    },
+    "shadow-3d": {
+        "label": "Sombra 3D",
+        "sample": "SOMBRA 3D AMARELA",
+        "css": "font-weight: 900; font-style: italic; color: #ffffff; text-shadow: 1.5px 1.5px 0 #ffd60a;",
+        "description": "Itálico branco com sombra dura amarela",
+    },
+    "spoken-word-pop": {
+        "label": "Palavra da Vez",
+        "sample": 'A <span style="color: #ffd60a; font-size: 1.12em;">PALAVRA</span> FALADA CRESCE',
+        "css": "font-weight: 900; color: #ffffff; -webkit-text-stroke: 1.2px #000000; text-shadow: 1px 1px 0 rgba(0,0,0,0.5);",
+        "description": "A palavra falada fica amarela e maior",
+    },
+    "neon-glow": {
+        "label": "Neon",
+        "sample": "BRILHO NEON ROSA",
+        "css": "font-weight: 900; color: #ffffff; text-shadow: 0 0 2px #ff2e88, 0 0 5px #ff2e88, 0 0 9px #ff2e88;",
+        "description": "Letra branca com brilho rosa em volta",
+    },
+    "highlighter-box": {
+        "label": "Marca-texto",
+        "sample": 'A <span style="background: #f8dc4a; color: #171717; padding: 0 3px; text-shadow: none;">PALAVRA</span> FALADA',
+        "css": "font-weight: 900; color: #ffffff; text-shadow: 0 2px 3px rgba(0,0,0,0.75);",
+        "description": "Caixa amarela atrás da palavra falada",
+    },
+    "dark-box": {
+        "label": "Caixa Escura",
+        "sample": 'TEXTO NA <span style="color: #f9ca4c;">CAIXA</span> ESCURA',
+        "css": "font-weight: 900; color: #ffffff; background: #0e1013; box-shadow: 0 0 0 1px rgba(255,255,255,0.14); padding: 1px 6px; -webkit-box-decoration-break: clone; box-decoration-break: clone;",
+        "description": "Caixa escura; a palavra falada fica amarela",
+    },
+    "editorial-serif": {
+        "label": "Editorial Serifa",
+        "sample": 'FRASE COM <span style="font-family: Georgia, serif; font-style: italic; color: #ec3533;">SERIFA</span>',
+        "css": "font-weight: 900; color: #ffffff; text-shadow: 0 2px 3px rgba(0,0,0,0.75);",
+        "description": "A palavra falada vira serifa itálica vermelha",
     },
 }
 
@@ -296,6 +394,17 @@ def _build_events(chunks: list[list[dict]], preset: CaptionPreset, casing_mode: 
     events = []
     for chunk in chunks:
         line_groups = wrap_chunk_into_word_groups(chunk)
+        if preset.highlight_mode == "active_word":
+            # one event per spoken word, lasting until the next word starts
+            for idx, word in enumerate(chunk):
+                end = chunk[idx + 1]["start"] if idx + 1 < len(chunk) else chunk[-1]["end"]
+                events.append({
+                    "start": word["start"],
+                    "end": max(word["start"], end),
+                    "text": "\\N".join(_render_plain_line(group, preset, word, casing_mode=casing_mode)
+                                       for group in line_groups),
+                })
+            continue
         highlight_word = None
         if preset.highlight_mode in ("keyword_color", "expression_highlight"):
             highlight_word = _pick_highlight_word(chunk)
@@ -315,9 +424,23 @@ def _build_events(chunks: list[list[dict]], preset: CaptionPreset, casing_mode: 
     return events
 
 
+def _ass_style_line(style_name: str, preset: CaptionPreset, alignment: int, margin_lr: int, margin_v: int) -> str:
+    bold_flag = -1 if preset.bold else 0
+    italic_flag = -1 if preset.italic else 0
+    return (
+        f"Style: {style_name},{preset.font_name},{preset.font_size},{preset.primary_color},"
+        f"{preset.secondary_color},{preset.outline_color},{preset.back_color},{bold_flag},{italic_flag},0,0,"
+        f"100,100,0,0,{preset.border_style},{preset.outline_width},{preset.shadow_depth},"
+        f"{alignment},{margin_lr},{margin_lr},{margin_v},1\n"
+    )
+
+
 def _render_ass_document(preset: CaptionPreset, video_width: int, video_height: int,
                           alignment: int, margin_lr: int, margin_v: int, events: list[dict]) -> str:
-    bold_flag = -1 if preset.bold else 0
+    styles = _ass_style_line("Default", preset, alignment, margin_lr, margin_v)
+    if preset.highlight_style:
+        styles += _ass_style_line("Highlight", replace(preset, **preset.highlight_style),
+                                  alignment, margin_lr, margin_v)
     header = (
         f"[Script Info]\n"
         f"Title: Cortaí Caption ({preset.name})\n"
@@ -330,10 +453,7 @@ def _render_ass_document(preset: CaptionPreset, video_width: int, video_height: 
         f"Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, "
         f"Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, "
         f"Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
-        f"Style: Default,{preset.font_name},{preset.font_size},{preset.primary_color},"
-        f"{preset.secondary_color},{preset.outline_color},{preset.back_color},{bold_flag},0,0,0,"
-        f"100,100,0,0,{preset.border_style},{preset.outline_width},{preset.shadow_depth},"
-        f"{alignment},{margin_lr},{margin_lr},{margin_v},1\n\n"
+        f"{styles}\n"
         f"[Events]\n"
         f"Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
     )
@@ -341,7 +461,7 @@ def _render_ass_document(preset: CaptionPreset, video_width: int, video_height: 
     for event in events:
         start = format_ass_timestamp(event["start"])
         end = format_ass_timestamp(event["end"])
-        lines.append(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{event['text']}\n")
+        lines.append(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{preset.event_prefix}{event['text']}\n")
     return "".join(lines)
 
 

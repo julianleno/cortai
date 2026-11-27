@@ -1,4 +1,4 @@
-"""Anthropic provider: clip-suggestion intelligence using Claude 3.5 Sonnet / Claude 3 Haiku."""
+"""Anthropic provider: clip-suggestion intelligence using Claude Haiku 5.5 by default."""
 import json
 import logging
 import httpx
@@ -9,14 +9,14 @@ from .prompt import build_suggestion_prompt
 logger = logging.getLogger(__name__)
 
 API_URL = "https://api.anthropic.com/v1/messages"
-DEFAULT_MODEL = "claude-3-5-haiku-20241022"
+DEFAULT_MODEL = "claude-haiku-5-5"
 
 
 class AnthropicProvider:
     name = "anthropic"
 
     def __init__(self, api_key: str | None, model: str = DEFAULT_MODEL,
-                 timeout_seconds: float = 35.0):
+                 timeout_seconds: float = 60.0):
         self.api_key = api_key
         self.model = model or DEFAULT_MODEL
         self.timeout_seconds = timeout_seconds
@@ -37,7 +37,9 @@ class AnthropicProvider:
         }
         payload = {
             "model": self.model,
-            "max_tokens": 2048,
+            # Modelos atuais pensam antes de responder e o raciocínio conta dentro de max_tokens.
+            "max_tokens": 16000,
+            "output_config": {"effort": "low"},
             "system": "Você é um editor especialista de vídeos virais. Responda estritamente com o objeto JSON contendo a chave 'clips'.",
             "messages": [
                 {"role": "user", "content": prompt}
@@ -50,7 +52,11 @@ class AnthropicProvider:
                 raise ProviderError(f"Anthropic HTTP {response.status_code}: {response.text}")
 
             data = response.json()
-            content = data["content"][0]["text"]
+            stop_reason = data.get("stop_reason")
+            if stop_reason in ("refusal", "max_tokens"):
+                raise ProviderError(f"Anthropic encerrou sem resposta completa (stop_reason={stop_reason})")
+            # A resposta pode trazer blocos de raciocínio antes do texto; pega o primeiro bloco de texto.
+            content = next(b["text"] for b in data.get("content", []) if b.get("type") == "text")
             # Extract JSON block if wrapped in markdown code fence
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0].strip()

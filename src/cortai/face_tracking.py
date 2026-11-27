@@ -535,6 +535,120 @@ def compute_active_speaker_windows(video_path: str, transcription: dict,
     return results
 
 
+# Distância de Bhattacharyya entre histogramas HSV de quadros seguidos. Medido numa palestra
+# real: dentro da mesma cena fica abaixo de 0.06; numa troca de câmera, acima de 0.5.
+SCENE_CUT_THRESHOLD = 0.3
+MIN_SCENE_SECONDS = 0.6
+FOLLOW_CHUNK_SECONDS = 3.0  # quando a pessoa anda dentro da cena, reenquadra em trechos deste tamanho
+
+
+def find_scene_cuts(frame_distances: list[tuple[float, float]], threshold: float = SCENE_CUT_THRESHOLD,
+                    min_scene: float = MIN_SCENE_SECONDS) -> list[float]:
+    """Instantes (em segundos) em que começa uma cena nova, a partir de pares
+    (tempo do quadro, distância para o quadro anterior). Ignora um corte a menos
+    de `min_scene` do anterior (flash, transição de poucos quadros)."""
+    cuts: list[float] = []
+    last = 0.0
+    for timestamp, distance in frame_distances:
+        if distance > threshold and timestamp - last >= min_scene:
+            cuts.append(timestamp)
+            last = timestamp
+    return cuts
+
+
+def detect_scene_cuts(video_path: str) -> list[float]:
+    """Lê todos os quadros (reduzidos) e devolve os instantes de troca de câmera."""
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        return []
+    distances: list[tuple[float, float]] = []
+    previous = None
+    try:
+        while True:
+            ok, frame = cap.read()
+            if not ok or frame is None:
+                break
+            timestamp = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
+            hsv = cv2.cvtColor(cv2.resize(frame, (160, 90)), cv2.COLOR_BGR2HSV)
+            hist = cv2.calcHist([hsv], [0, 1], None, [16, 16], [0, 180, 0, 256])
+            cv2.normalize(hist, hist)
+            if previous is not None:
+                distances.append((timestamp, float(cv2.compareHist(previous, hist, cv2.HISTCMP_BHATTACHARYYA))))
+            previous = hist
+    finally:
+        cap.release()
+    return find_scene_cuts(distances)
+
+
+def merge_similar_windows(windows: list[dict], tolerance_ratio: float = 0.04) -> list[dict]:
+    """Junta cenas seguidas cujo enquadramento quase não muda, para não cortar à toa.
+    A janela que fica é a da cena mais longa do grupo."""
+    merged: list[dict] = []
+    for window in windows:
+        if merged:
+            last = merged[-1]
+            tolerance = tolerance_ratio * window["source_width"]
+            same_place = (abs(window["x"] - last["x"]) <= tolerance and abs(window["y"] - last["y"]) <= tolerance
+                          and window["used_fallback"] == last["used_fallback"])
+            if same_place:
+                keep = last if (last["end"] - last["start"]) >= (window["end"] - window["start"]) else window
+                merged[-1] = {**keep, "start": last["start"], "end": window["end"]}
+                continue
+        merged.append(dict(window))
+    return merged
+
+
+def compute_scene_crop_windows(video_path: str, target_width: int = 1080, target_height: int = 1920,
+                               samples_per_scene: int = 6) -> list[dict]:
+    """Layout "Segue o rosto": um enquadramento por cena (entre trocas de câmera),
+    centrado no rosto principal daquela cena. Um enquadramento único para o clipe
+    inteiro erra em vídeos que alternam close e plano aberto (issue #2)."""
+    source_width, source_height = get_video_dimensions(video_path)
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 0
+    frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0
+    cap.release()
+    duration = frame_count / fps if fps > 0 else 0
+    if duration <= 0:
+        return [{**compute_vertical_crop_window(video_path, target_width, target_height), "start": 0.0, "end": 0.0}]
+
+    bounds = [0.0] + detect_scene_cuts(video_path) + [duration]
+    crop_w = compute_center_crop_window(source_width, source_height, target_width, target_height)[2]
+    pieces = []
+    for start, end in zip(bounds, bounds[1:]):
+        num_samples = max(2, min(samples_per_scene, int((end - start) * 2)))
+        # O maior rosto de cada quadro: numa cena há uma pessoa principal, e ela pode se mexer entre as amostras.
+        samples = sample_face_track(video_path, num_samples=num_samples, start=start, end=end)
+        spread = (max(s.x + s.w for s in samples) - min(s.x for s in samples)) if samples else 0
+        if spread > 0.9 * crop_w and end - start >= 2 * FOLLOW_CHUNK_SECONDS:
+            # A pessoa anda mais do que cabe num enquadramento: reenquadra a cada trecho curto.
+            chunks = max(2, round((end - start) / FOLLOW_CHUNK_SECONDS))
+            step = (end - start) / chunks
+            for i in range(chunks):
+                a, b = start + i * step, start + (i + 1) * step
+                pieces.append((a, b, sample_face_track(video_path, num_samples=3, start=a, end=b)))
+        else:
+            pieces.append((start, end, samples))
+
+    windows = []
+    for start, end, samples in pieces:
+        if samples:
+            x, y, w, h = compute_face_crop_window(samples, source_width, source_height, target_width, target_height)
+            face_ratio = statistics.median(s.h for s in samples) / h
+        else:
+            x, y, w, h = compute_center_crop_window(source_width, source_height, target_width, target_height)
+            face_ratio = 0.0
+        windows.append({
+            "start": start, "end": end, "x": x, "y": y, "width": w, "height": h,
+            "source_width": source_width, "source_height": source_height,
+            "faces_detected": len(samples), "used_fallback": not samples,
+            "median_face_height_ratio": face_ratio,
+        })
+    merged = merge_similar_windows(windows)
+    logger.info("Segue o rosto: %d cena(s), %d enquadramento(s)", len(windows), len(merged))
+    return merged
+
+
 def compute_panel_crop_window(samples: list[FaceSample], source_width: int, source_height: int,
                               panel_width: int = 1080, panel_height: int = 960,
                               headroom_ratio: float = 0.1) -> tuple[int, int, int, int]:

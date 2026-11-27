@@ -144,15 +144,6 @@
             border-color: rgba(255, 106, 43, 0.3);
         }
 
-        /* Classes antigas ainda usadas em edit_transcript/template_form */
-        .card-cyber { background: var(--surface-dark); border: 1px solid var(--border-dark); border-radius: var(--radius-lg); }
-        .btn-outline-cyber { border: 1px solid var(--border-dark); color: var(--text-main); background: var(--surface-dark); border-radius: var(--radius-md); font-weight: 600; }
-        .btn-check:checked + .btn-outline-cyber { border-color: var(--caju); background: rgba(255, 106, 43, 0.1); color: var(--text-main); }
-        .btn-magenta { background-color: var(--caju); color: var(--tinta); border: none; border-radius: var(--radius-md); }
-        .btn-magenta:hover { background-color: var(--caju-hover); color: var(--tinta); }
-        .text-cyan { color: var(--mar) !important; }
-        .text-magenta { color: var(--caju) !important; }
-
         /* Navegação */
         .ct-nav {
             padding: 10px 14px;
@@ -175,7 +166,8 @@
         .ct-field { width: 100%; min-height: 48px; padding: 10px 14px; border-radius: 12px; border: 1.5px solid var(--border-dark); background: var(--bg-dark); color: var(--text-main); font: inherit; font-size: 0.95rem; }
         .ct-field:focus { border-color: var(--caju); outline: none; box-shadow: 0 0 0 3px rgba(255, 106, 43, 0.2); }
         .ct-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-        .ct-grid-caps { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+        .ct-grid-caps { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+        .ct-cap-label { padding: 0 2px; font-size: 0.75rem; font-weight: 600; line-height: 1.25; min-height: 2.5em; }
         .ct-opt-input { position: absolute; opacity: 0; pointer-events: none; }
         .ct-opt {
             display: flex; align-items: center; gap: 14px; height: 100%; margin: 0; padding: 14px;
@@ -194,14 +186,14 @@
         .ct-opt-input:checked + .ct-opt .ct-ratio span { border-color: var(--caju); }
         .ct-glyph { position: relative; width: 30px; height: 46px; border-radius: 6px; border: 1.5px solid #4A4A54; overflow: hidden; flex: none; background: var(--bg-dark); }
         .ct-glyph span { position: absolute; display: block; }
-        .ct-opt-col { flex-direction: column; align-items: stretch; gap: 10px; padding: 8px 8px 12px; }
-        .ct-cap { position: relative; height: 140px; border-radius: 10px; background: #0B0B0D; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; padding: 0 8px 16px; }
+        .ct-opt-col { flex-direction: column; align-items: stretch; gap: 8px; padding: 6px 6px 10px; }
+        .ct-cap { position: relative; height: 92px; border-radius: 10px; background: #0B0B0D; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; padding: 0 8px 16px; }
         .ct-cap::before, .ct-cap::after { content: ""; position: absolute; left: 50%; background: #26262C; }
-        .ct-cap::before { top: 20px; width: 44px; height: 44px; margin-left: -22px; border-radius: 50%; }
-        .ct-cap::after { top: 70px; width: 100px; height: 90px; margin-left: -50px; border-radius: 44px 44px 0 0; }
-        .ct-cap-text { position: relative; z-index: 1; text-align: center; line-height: 1.15; font-size: 0.95rem !important; font-family: var(--cap-font, Montserrat), sans-serif !important; }
+        .ct-cap::before { top: 10px; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; }
+        .ct-cap::after { top: 44px; width: 70px; height: 60px; margin-left: -35px; border-radius: 30px 30px 0 0; }
+        .ct-cap-text { position: relative; z-index: 1; text-align: center; line-height: 1.15; font-size: 0.8rem !important; font-family: var(--cap-font, Montserrat), sans-serif !important; }
         .ct-seg { display: flex; padding: 4px; gap: 4px; border-radius: 12px; background: var(--bg-dark); border: 1px solid var(--border-dark); }
-        .ct-seg label { flex: 1; min-height: 40px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 9px; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: background-color .15s ease, color .15s ease; }
+        .ct-seg label { flex: 1; min-height: 44px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 9px; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: background-color .15s ease, color .15s ease; }
         .ct-seg input:checked + label { background: var(--border-dark); color: var(--text-main); }
         .ct-seg input:focus-visible + label { outline: 2px solid var(--caju); outline-offset: 2px; }
         .ct-drop { position: relative; display: flex; align-items: center; gap: 16px; padding: 20px; border-radius: 14px; border: 1.5px dashed var(--border-dark); transition: border-color .18s ease, background-color .18s ease; }
@@ -221,6 +213,24 @@
         .ct-summary dd { margin: 0; font-weight: 600; text-align: right; }
         .ct-note { display: flex; gap: 12px; padding: 16px; border-radius: 16px; background: rgba(18, 181, 166, 0.08); border: 1px solid rgba(18, 181, 166, 0.3); font-size: 0.875rem; line-height: 1.5; }
         @media (min-width: 992px) { .ct-sticky { position: sticky; top: 96px; } }
+
+        /* Assistente da home: uma etapa por vez */
+        .ct-stepper { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        .ct-stepper button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px 0 8px; border-radius: 999px; border: 1px solid var(--border-dark); background: transparent; color: var(--text-muted); font-size: 0.875rem; font-weight: 600; transition: border-color .18s ease, background-color .18s ease, color .18s ease; }
+        .ct-stepper button:not(:disabled):hover { border-color: var(--text-muted); color: var(--text-main); }
+        .ct-stepper button:disabled { cursor: default; opacity: .6; }
+        .ct-stepper button:focus-visible { outline: 2px solid var(--caju); outline-offset: 2px; }
+        .ct-stepper .ct-step { width: 28px; height: 28px; background: var(--surface-card); color: var(--text-muted); }
+        .ct-stepper .fa-check { display: none; font-size: 12px; }
+        .ct-stepper li.is-done .ct-step { background: var(--mar); color: #062320; }
+        .ct-stepper li.is-done .ct-step-num { display: none; }
+        .ct-stepper li.is-done .fa-check { display: inline; }
+        .ct-stepper li.is-active button { border-color: var(--caju); background: rgba(255, 106, 43, 0.08); color: var(--text-main); }
+        .ct-stepper li.is-active .ct-step { background: var(--caju); color: var(--tinta); }
+        .ct-wizard .ct-pane { min-height: 380px; animation: ctIn .24s cubic-bezier(.2, .8, .2, 1); }
+        .ct-wizard .ct-pane h2:focus { outline: none; }
+        .ct-wizard-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-dark); }
+        .ct-wizard-nav .btn:disabled { visibility: hidden; }
 
         /* Progresso por etapas */
         :root { --mar-text: #5EEAD4; }
@@ -260,6 +270,7 @@
         @keyframes ctPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 106, 43, .45); } 50% { box-shadow: 0 0 0 6px rgba(255, 106, 43, 0); } }
         @keyframes ctBreath { from { opacity: .7; } to { opacity: 1; } }
         @media (prefers-reduced-motion: reduce) {
+            .ct-wizard .ct-pane { animation: none; }
             .ct-opt, .ct-clip, .ct-drop, .ct-seg label, .ct-stage-bar::after { transition: none; }
             .ct-shimmer, .ct-stage.active .ct-dot, .ct-stage.active .ct-stage-bar::after, .ct-adv[open] > .ct-adv-body { animation: none; }
         }
@@ -297,11 +308,23 @@
 
         footer {
             margin-top: auto;
-            padding: 2rem 0;
+            padding: 0.75rem 0;
             border-top: 1px solid var(--border-dark);
             color: var(--text-muted);
             font-size: 0.85rem;
         }
+        /* Aviso de atualização */
+        .ct-update-notes h4 { font-family: var(--font-display); font-size: 1rem; font-weight: 700; margin: 1rem 0 .5rem; }
+        .ct-update-notes h4:first-child { margin-top: 0; }
+        .ct-update-notes ul, .ct-update-notes ol { padding-left: 1.2rem; margin-bottom: .75rem; }
+        .ct-update-notes li { margin-bottom: .35rem; }
+        .ct-update-notes code { color: var(--caju); }
+        .ct-update { align-items: center; flex-wrap: wrap; background: var(--surface-dark); border-color: rgba(255, 106, 43, 0.35); }
+        .ct-update-icon { color: var(--caju); font-size: 1.2rem; }
+        .ct-update-text { flex: 1 1 260px; min-width: 0; }
+        .ct-update-text code { color: var(--text-main); background: var(--surface-card); padding: 1px 6px; border-radius: 6px; }
+        .ct-update-close { width: 44px; padding: 0; color: var(--text-muted); background: transparent; border: none; border-radius: var(--radius-md); }
+        .ct-update-close:hover { color: var(--text-main); background: var(--surface-card); }
     </style>
 </head>
 <body>
@@ -315,7 +338,7 @@
                     <path d="M34.98,41.00 L51.24,31.44 L41.09,25.47 Z" fill="#16140F"/>
                 </svg>
                 <span class="brand-name">cortaí</span>
-                <span class="badge rounded-pill ms-1 px-2 py-1 small fw-bold" style="background-color: var(--caju) !important; color: var(--tinta);">v{{ app_version or '1.5.0' }}</span>
+                <span class="badge rounded-pill ms-1 px-2 py-1 small fw-bold" style="background-color: var(--caju) !important; color: var(--tinta);">v{{ app_version or '1.6.1' }}</span>
             </a>
             <div class="d-flex align-items-center gap-3">
                 {% set ep = request.endpoint %}
@@ -335,6 +358,99 @@
         </div>
     </nav>
 
+    {% if update %}
+    <div class="container pt-4" id="ctUpdate">
+        <div class="ct-note ct-update" role="status">
+            <i class="fas fa-circle-arrow-up ct-update-icon" aria-hidden="true"></i>
+            <div class="ct-update-text">
+                <strong>Versão {{ update.version }} disponível</strong>
+                <span class="ct-hint d-block" id="ctUpdateMsg">{% if update_self %}Você está na {{ app_version }}. O Cortaí baixa a versão nova e reabre sozinho.{% else %}Atualize com <code>git pull</code> e rode o <code>start.bat</code>/<code>start.sh</code> de novo.{% endif %}</span>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                {% if update_self %}
+                <button type="button" class="btn btn-caju ct-btn" id="ctUpdateApply">Atualizar agora</button>
+                {% endif %}
+                <a class="btn btn-outline-cortai ct-btn" href="{{ update.url }}" target="_blank" rel="noopener">Ver novidades</a>
+                <button type="button" class="btn ct-btn ct-update-close" id="ctUpdateClose" aria-label="Dispensar aviso da versão {{ update.version }}"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="ctUpdateModal" tabindex="-1" aria-labelledby="ctUpdateModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content ct-section p-0" style="border-radius: var(--radius-lg);">
+                <div class="modal-header border-0 px-4 pt-4 pb-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="ct-icon-box" aria-hidden="true"><i class="fas fa-gift"></i></span>
+                        <div>
+                            <h2 class="ct-h2 mb-0" id="ctUpdateModalTitle">Versão {{ update.version }} disponível</h2>
+                            <span class="ct-hint">Você está na {{ app_version }}</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body px-4 ct-update-notes">
+                    {% if update_notes %}{{ update_notes }}{% else %}<p>Esta versão traz melhorias e correções.</p>{% endif %}
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-2 d-flex flex-column align-items-stretch gap-2">
+                    <span class="ct-hint" id="ctUpdateModalMsg" aria-live="polite">{% if update_self %}O Cortaí baixa a versão nova e reabre sozinho.{% else %}Atualize com <code>git pull</code> e rode o <code>start.bat</code>/<code>start.sh</code> de novo.{% endif %}</span>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-cortai ct-btn" data-bs-dismiss="modal">Depois</button>
+                        {% if update_self %}
+                        <button type="button" class="btn btn-caju ct-btn" id="ctUpdateModalApply">Atualizar agora</button>
+                        {% else %}
+                        <a class="btn btn-caju ct-btn" href="{{ update.url }}" target="_blank" rel="noopener">Ver na página</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var version = {{ update.version | tojson }};
+            var applyUrl = {{ url_for('update_apply') | tojson }};
+
+            // Baixa e troca o .exe; usado pela faixa e pelo modal
+            async function applyUpdate(btn, msg) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Baixando…';
+                msg.textContent = 'Baixando a versão ' + version + '. Pode levar alguns minutos; o Cortaí reabre sozinho quando terminar.';
+                try {
+                    var r = await fetch(applyUrl, { method: 'POST', headers: { 'X-Cortai': '1' } });
+                    var d = await r.json().catch(function () { return {}; });
+                    if (!r.ok || !d.ok) throw new Error(d.error || 'Não foi possível atualizar.');
+                    btn.textContent = 'Reiniciando…';
+                    msg.textContent = 'Pronto. Fechando esta versão e abrindo a ' + version + '…';
+                } catch (e) {
+                    btn.disabled = false;
+                    btn.textContent = 'Tentar de novo';
+                    msg.textContent = (e.message || 'Não foi possível atualizar.') + ' O Cortaí continua funcionando na versão atual.';
+                }
+            }
+
+            var box = document.getElementById('ctUpdate'), bannerKey = 'cortai_update_dispensada';
+            try { if (localStorage.getItem(bannerKey) === version) box.remove(); } catch (e) {}
+            document.getElementById('ctUpdateClose').addEventListener('click', function () {
+                try { localStorage.setItem(bannerKey, version); } catch (e) {}
+                box.remove();
+            });
+            var bannerBtn = document.getElementById('ctUpdateApply');
+            if (bannerBtn) bannerBtn.addEventListener('click', function () { applyUpdate(bannerBtn, document.getElementById('ctUpdateMsg')); });
+            var modalBtn = document.getElementById('ctUpdateModalApply');
+            if (modalBtn) modalBtn.addEventListener('click', function () { applyUpdate(modalBtn, document.getElementById('ctUpdateModalMsg')); });
+
+            // O modal com as novidades aparece uma vez por versão; depois fica só a faixa
+            window.addEventListener('load', function () {
+                var modalKey = 'cortai_update_modal_visto', seen = null;
+                try { seen = localStorage.getItem(modalKey); } catch (e) {}
+                if (seen === version || !window.bootstrap) return;
+                try { localStorage.setItem(modalKey, version); } catch (e) {}
+                new bootstrap.Modal(document.getElementById('ctUpdateModal')).show();
+            });
+        })();
+    </script>
+    {% endif %}
+
     <div class="container py-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -352,9 +468,12 @@
     </div>
 
     <footer>
-        <div class="container text-center">
-            <p class="mb-1">&copy; {{ now().year }} Cortaí <strong>v{{ app_version or '1.5.0' }}</strong> — Inteligência Artificial de Cortes de Vídeo.</p>
-            <small class="text-muted">Software livre (GPL-3.0) com processamento local-first.</small>
+        <div class="container d-flex flex-wrap align-items-center justify-content-center gap-3 text-center">
+            <span>&copy; {{ now().year }} Cortaí <strong>v{{ app_version or '1.6.1' }}</strong> · software livre (GPL-3.0) · feito por Julian Leno</span>
+            <a href="https://x.com/lenofaz" target="_blank" rel="noopener" class="btn btn-outline-cortai btn-sm d-inline-flex align-items-center gap-2 px-3" style="font-size: 0.8125rem;">
+                <i class="fab fa-x-twitter" aria-hidden="true"></i>Seguir @lenofaz
+                <span class="visually-hidden">no X (abre em nova janela)</span>
+            </a>
         </div>
     </footer>
 

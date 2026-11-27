@@ -161,6 +161,44 @@ class TestBuildAssSubtitleAllPresets(unittest.TestCase):
         self.assertIn("É", content)
         self.assertIn("AÇÃO", content)
 
+    def _build(self, preset_name, transcription=None, **kwargs):
+        output_path = os.path.join(self.test_dir, f"{preset_name}.ass")
+        build_ass_subtitle(transcription or self.transcription, preset_name, 1080, 1920, output_path, **kwargs)
+        with open(output_path, "r", encoding="utf-8") as f:
+            return f.read()
+
+    def test_every_preset_has_preview_metadata(self):
+        from cortai.subtitles import CAPTION_PRESETS_METADATA
+        self.assertEqual(set(CAPTION_PRESETS), set(CAPTION_PRESETS_METADATA))
+
+    def test_active_word_emits_one_event_per_word_highlighting_it(self):
+        transcription = {"segments": [{"id": 0, "start": 0.0, "end": 1.2, "text": "um dois tres", "words": [
+            {"word": " um", "start": 0.0, "end": 0.3, "probability": 0.99},
+            {"word": " dois", "start": 0.4, "end": 0.7, "probability": 0.99},
+            {"word": " tres", "start": 0.8, "end": 1.2, "probability": 0.99},
+        ]}]}
+        content = self._build("spoken-word-pop", transcription)
+        dialogues = [line for line in content.splitlines() if line.startswith("Dialogue:")]
+        self.assertEqual(len(dialogues), 3)
+        # each word lasts until the next one starts; the last one until the chunk ends
+        self.assertIn("0:00:00.00,0:00:00.40", dialogues[0])
+        self.assertIn("0:00:00.80,0:00:01.20", dialogues[2])
+        self.assertTrue(dialogues[1].endswith("UM {\\c&H0AD6FF&\\fscx112\\fscy112}DOIS{\\r} TRES"))
+
+    def test_box_highlight_adds_highlight_style_with_opaque_box_and_font_override(self):
+        content = self._build("highlighter-box", font_name="Anton")
+        self.assertIn("Style: Highlight,Anton,", content)
+        highlight = next(line for line in content.splitlines() if line.startswith("Style: Highlight"))
+        self.assertEqual(highlight.split(",")[15], "3")  # BorderStyle 3 = box
+        self.assertIn("{\\rHighlight}", content)
+
+    def test_italic_flag_and_event_prefix(self):
+        self.assertIn(",-1,-1,0,0,", self._build("shadow-3d"))  # Bold, Italic
+        content = self._build("neon-glow")
+        self.assertTrue(all(line.split(",,", 2)[-1].startswith("{\\blur10}")
+                            for line in content.splitlines() if line.startswith("Dialogue:")))
+        self.assertNotIn("Style: Highlight", self._build("white-bold"))
+
     def test_unknown_preset_raises(self):
         with self.assertRaises(ValueError):
             build_ass_subtitle(self.transcription, "does-not-exist", 1080, 1920,

@@ -11,3 +11,6 @@
 *.pyc binary
 *.pdf binary
 *.zip binary
+
+# Shell scripts must keep LF line endings to run on Linux/macOS.
+*.sh text eol=lf

@@ -1,0 +1,29 @@
+name: ✨ Sugestão de funcionalidade
+description: Proponha uma ideia ou melhoria para o Cortaí
+title: "[Ideia]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Qual problema isso resolve?
+      description: Conte o contexto, por exemplo "sempre preciso ajustar manualmente o enquadramento quando..."
+    validations:
+      required: true
+  - type: textarea
+    id: solucao
+    attributes:
+      label: Solução proposta
+      description: Como você imagina que deveria funcionar?
+    validations:
+      required: true
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas consideradas
+  - type: checkboxes
+    id: contribuir
+    attributes:
+      label: Contribuição
+      options:
+        - label: Tenho interesse em implementar isso e abrir um PR

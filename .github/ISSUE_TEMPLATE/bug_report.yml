@@ -1,0 +1,52 @@
+name: 🐛 Bug report
+description: Algo não funcionou como esperado
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar! Antes de enviar, veja se já existe uma issue parecida.
+        **Não cole chaves de API nem dados pessoais nos logs.**
+  - type: textarea
+    id: descricao
+    attributes:
+      label: O que aconteceu?
+      description: Descreva o problema e o que você esperava que acontecesse.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduzir
+    attributes:
+      label: Como reproduzir
+      placeholder: |
+        1. Colei a URL ...
+        2. Escolhi o formato ...
+        3. Cliquei em ...
+    validations:
+      required: true
+  - type: dropdown
+    id: entrada
+    attributes:
+      label: Tipo de entrada
+      options:
+        - URL do YouTube
+        - Arquivo local
+        - Ambos
+  - type: input
+    id: so
+    attributes:
+      label: Sistema operacional
+      placeholder: "Windows 11, Ubuntu 24.04, macOS 15..."
+    validations:
+      required: true
+  - type: input
+    id: versoes
+    attributes:
+      label: Versões do Cortaí, Python e FFmpeg
+      placeholder: "Cortaí 1.5.0, Python 3.12.4, FFmpeg 7.0"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs do terminal
+      render: shell

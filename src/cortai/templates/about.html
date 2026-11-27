@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}
+Sobre - Cortaí
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Sobre o Cortaí</h4>
+            </div>
+            <div class="card-body">
+                <p>O Cortaí é uma aplicação local-first que transforma vídeos longos do YouTube em clipes verticais prontos para YouTube Shorts, TikTok e Instagram Reels.</p>
+                
+                <h5>Como funciona:</h5>
+                <ol>
+                    <li><strong>Download:</strong> Baixa o vídeo do YouTube usando yt-dlp</li>
+                    <li><strong>Corte:</strong> Extrai o segmento de tempo especificado</li>
+                    <li><strong>Transcrição:</strong> Converte o áudio em texto usando faster-whisper</li>
+                    <li><strong>Legendas:</strong> Gera legendas sincronizadas a partir da transcrição</li>
+                    <li><strong>Redimensionamento:</strong> Converte o vídeo para formato vertical 9:16</li>
+                    <li><strong>Marca d'água:</strong> Adiciona uma marca d'água personalizável</li>
+                    <li><strong>Exportação:</strong> Salva o vídeo final em MP4 com codec H.264/AAC</li>
+                </ol>
+                
+                <h5>Recursos:</h5>
+                <ul>
+                    <li>Processamento 100% local - seus vídeos nunca deixam seu computador</li>
+                    <li>Legendas automáticas com sincronização precisa</li>
+                    <li>Marca d'água personalizável</li>
+                    <li>Formato otimizado para plataformas de vídeo curto</li>
+                    <li>Interface simples e intuitiva</li>
+                </ul>
+                
+                <h5>Tecnologias utilizadas:</h5>
+                <ul>
+                    <li><strong>Python:</strong> Linguagem principal</li>
+                    <li><strong>Flask:</strong> Framework web</li>
+                    <li><strong>yt-dlp:</strong> Download de vídeos do YouTube</li>
+                    <li><strong>faster-whisper:</strong> Transcrição de áudio</li>
+                    <li><strong>FFmpeg:</strong> Processamento de vídeo e áudio</li>
+                </ul>
+                
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                        Voltar para Início
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

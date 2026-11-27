@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}
+Editor Completo de Transcrição & Legenda — Cortaí
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-11 col-md-12">
+        <div class="card card-cyber p-4 mb-4">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fas fa-edit text-cyan me-2"></i>Editor de Transcrição & Legenda</h4>
+                        <small class="text-muted">Clipe: {{ clip.title or 'Clipe selecionado' }}</small>
+                    </div>
+                    <a href="{{ url_for('status', job_id=clip.job_id) }}" class="btn btn-outline-cyber btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar ao Status
+                    </a>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Left Column: Video Preview Player -->
+                    <div class="col-md-5">
+                        <div class="rounded-4 overflow-hidden bg-black text-center p-2 mb-3" style="border: 1px solid var(--border-dark);">
+                            <video controls preload="metadata" src="{{ url_for('download_clip', clip_id=clip.id) }}"
+                                   style="width: 100%; max-height: 480px; object-fit: contain; border-radius: 12px;"></video>
+                        </div>
+
+                        <div class="card card-cyber p-3">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-paint-brush text-magenta me-2"></i>Customização da Legenda</h6>
+                            <p class="text-muted small mb-3">Ajuste o estilo visual das palavras deste clipe:</p>
+
+                            <div class="mb-3">
+                                <label for="caption_font_select" class="form-label small fw-bold">Fonte:</label>
+                                <select class="form-select bg-dark text-light border-secondary form-select-sm" id="caption_font_select"
+                                        name="caption_font" form="transcript-form">
+                                    {% for font in caption_fonts %}
+                                    <option value="{{ font }}" {{ 'selected' if render_options.caption_font == font else '' }}>{{ font }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Interactive Word-by-Word Editor -->
+                    <div class="col-md-7">
+                        <form method="POST" id="transcript-form">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge bg-magenta text-white px-3 py-2 rounded-pill font-weight-bold fw-bold">
+                                    <i class="fas fa-clock me-1"></i>[00:00 - {{ '%.1f'|format(clip.end_seconds - clip.start_seconds) }}s]
+                                </span>
+                                <small class="text-muted">Clique em qualquer palavra para editar o texto ou tempo.</small>
+                            </div>
+
+                            <p class="text-muted small mb-3">
+                                Altere o texto palavra por palavra abaixo. As alterações serão queimadas diretamente na legenda do clipe em HD.
+                            </p>
+
+                            <!-- Word-by-Word Interactive Editor Grid -->
+                            <div class="p-3 rounded-4 bg-dark mb-4" style="border: 1px solid var(--border-dark); max-height: 400px; overflow-y: auto;">
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for word in words %}
+                                    <div class="d-flex flex-column p-2 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25" style="min-width: 90px;">
+                                        <small class="text-info fw-bold mb-1" style="font-size: 0.68rem;">
+                                            {{ '%.1f'|format(word.start) }}s
+                                        </small>
+                                        <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary p-1 fw-bold text-center"
+                                               name="word_{{ word.index }}" value="{{ word.text }}"
+                                               title="Tempo no clipe: {{ '%.2f'|format(word.start) }}s a {{ '%.2f'|format(word.end) }}s">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-magenta btn-lg py-3 fw-bold shadow-lg">
+                                    <i class="fas fa-bolt me-2"></i>Salvar e Re-renderizar Legenda em HD
+                                </button>
+                                <a href="{{ url_for('status', job_id=clip.job_id) }}" class="btn btn-outline-cyber">Cancelar</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

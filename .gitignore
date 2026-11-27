@@ -1,0 +1,57 @@
+# Segredos
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Processamento local
+storage/*
+!storage/.gitkeep
+outputs/
+cache/
+tmp/
+
+# Vídeos e áudios
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.avi
+*.wav
+*.mp3
+*.aac
+*.m4a
+
+# Legendas geradas
+*.srt
+*.vtt
+*.ass
+
+# Logs
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Build / empacotamento
+*.egg-info/
+*.spec

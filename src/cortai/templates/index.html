@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}
+Novo Processamento — Cortaí
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-md-12">
+        <div class="card card-cyber p-4 mb-4">
+            <div class="card-body">
+                <h3 class="fw-bold mb-2">Novo Processamento de Vídeo</h3>
+                <p class="text-muted mb-4">Selecione uma URL do YouTube ou faça upload de arquivos locais para gerar cortes com legenda estilizada, lip-sync e molduras.</p>
+
+                <form method="POST" action="{{ url_for('submit') }}" enctype="multipart/form-data">
+                    <!-- Source Mode Selector (YouTube vs Local File) -->
+                    <div class="mb-4">
+                        <label class="form-label font-weight-bold fw-bold">Origem do Vídeo</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="input_source" id="source_youtube" value="youtube" checked autocomplete="off" onchange="toggleSourceInput()">
+                            <label class="btn btn-outline-cyber py-2" for="source_youtube">
+                                <i class="fab fa-youtube text-danger me-2"></i>YouTube (URL ou Lote de URLs)
+                            </label>
+                            <input type="radio" class="btn-check" name="input_source" id="source_file" value="file" autocomplete="off" onchange="toggleSourceInput()">
+                            <label class="btn btn-outline-cyber py-2" for="source_file">
+                                <i class="fas fa-file-video text-cyan me-2"></i>Arquivo Local (.mp4, .mkv, .mov)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- YouTube Multi-URL Container -->
+                    <div class="mb-4" id="youtube_container">
+                        <label for="urls" class="form-label font-weight-bold fw-bold">URLs do YouTube (Uma por linha para Lote)</label>
+                        <textarea class="form-control bg-dark text-light border-secondary p-3" id="urls" name="urls" rows="3"
+                                  placeholder="https://www.youtube.com/watch?v=...&#10;https://www.youtube.com/watch?v=..."></textarea>
+                        <div class="form-text text-muted">Você pode colar até 10 URLs de uma vez e acompanhar cada vídeo como um projeto separado.</div>
+                    </div>
+
+                    <!-- Local File Multi-Upload Container -->
+                    <div class="mb-4" id="file_container" style="display: none;">
+                        <label for="video_files" class="form-label font-weight-bold fw-bold">Selecione um ou mais arquivos de vídeo</label>
+                        <input class="form-control bg-dark text-light border-secondary p-3" type="file" id="video_files" name="video_files" accept=".mp4,.mkv,.mov,.avi,.webm" multiple>
+                        <div class="form-text text-muted">Formatos suportados: MP4, MKV, MOV, AVI, WEBM. Todos serão processados localmente.</div>
+                    </div>
+
+                    {% if templates %}
+                    <div class="mb-4">
+                        <label for="template_id" class="form-label font-weight-bold fw-bold"><i class="fas fa-bookmark text-caju me-2"></i>Template de Canal Salvo (Opcional)</label>
+                        <select class="form-select bg-dark text-light border-secondary p-2" id="template_id" name="template_id">
+                            <option value="" selected>Nenhum (Usar configurações avulsas abaixo)</option>
+                            {% for tpl in templates %}
+                            <option value="{{ tpl.id }}">{{ tpl.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <!-- Aspect Ratio & Duration Settings -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label font-weight-bold fw-bold">Proporção / Formato do Vídeo</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="aspect_ratio" id="ratio_9_16" value="9:16" checked autocomplete="off" onchange="toggleAspectRatioLimits()">
+                                <label class="btn btn-outline-cyber py-2" for="ratio_9_16">
+                                    <i class="fas fa-mobile-alt me-2 text-cyan"></i>Vertical 9:16 (Shorts / TikTok)
+                                </label>
+                                <input type="radio" class="btn-check" name="aspect_ratio" id="ratio_16_9" value="16:9" autocomplete="off" onchange="toggleAspectRatioLimits()">
+                                <label class="btn btn-outline-cyber py-2" for="ratio_16_9">
+                                    <i class="fas fa-desktop me-2 text-magenta"></i>Horizontal 16:9 (YouTube)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label font-weight-bold fw-bold">Layout de Enquadramento & Moldura</label>
+                            <select class="form-select bg-dark text-light border-secondary p-2" id="layout" name="layout">
+                                <option value="auto" selected>👤 Segue o Rosto (Auto Face-Aware)</option>
+                                <option value="active_speaker">🗣️ Ativo por Fala (Lip-Sync Troca de Rosto)</option>
+                                <option value="card_frame">📇 Moldura Social Card (Vídeo Inteiro + Fundo Social)</option>
+                                <option value="header_footer_frame">🖼️ Moldura Editorial (Vídeo Inteiro + Topo Título)</option>
+                                <option value="blurred_background">🌫️ Fundo Desfocado (Blurred Background)</option>
+                                <option value="center">🎯 Crop Central Fixo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label for="language" class="form-label fw-bold">Idioma da fala</label>
+                            <select class="form-select bg-dark text-light border-secondary" id="language" name="language">
+                                <option value="" selected>Detectar automaticamente</option>
+                                <option value="pt">Português</option>
+                                <option value="en">Inglês</option>
+                                <option value="es">Espanhol</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="vocabulary" class="form-label fw-bold">Vocabulário personalizado</label>
+                            <input type="text" class="form-control bg-dark text-light border-secondary" id="vocabulary" name="vocabulary"
+                                   placeholder="ANAC, VOEPASS, nomes e siglas do vídeo">
+                            <div class="form-text text-muted">Separe termos por vírgula para corrigir nomes próprios e siglas na legenda.</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <label for="min_duration" class="form-label">Duração mínima (s)</label>
+                            <input type="number" class="form-control bg-dark text-light border-secondary" id="min_duration" name="min_duration" min="1" value="15" step="1">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="max_duration" class="form-label">Duração máxima (s)</label>
+                            <input type="number" class="form-control bg-dark text-light border-secondary" id="max_duration" name="max_duration" min="1" max="60" value="60" step="1">
+                            <div class="form-text" id="max_duration_help">Até 60s (1 min) no formato vertical 9:16</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="num_clips" class="form-label">Quantidade de clipes</label>
+                            <input type="number" class="form-control bg-dark text-light border-secondary" id="num_clips" name="num_clips" min="1" max="10" value="3" step="1">
+                        </div>
+                    </div>
+
+                    <!-- Customização Avançada de Legendas (Estilo, Fonte & Casing) -->
+                    <div class="mb-4">
+                        <label class="form-label font-weight-bold fw-bold">Estilo Visual da Legenda</label>
+                        <div class="row g-2 mb-3">
+                            {% for preset_key, preset_info in caption_presets.items() %}
+                            <div class="col-md-4 col-sm-6">
+                                <div class="card h-100 preset-card p-2 text-center border border-secondary border-opacity-50 cursor-pointer"
+                                     onclick="selectCaptionPreset('{{ preset_key }}')" id="preset-card-{{ preset_key }}" style="cursor: pointer; background: var(--surface-dark);">
+                                    <div class="form-check d-flex align-items-center justify-content-center mb-1">
+                                        <input class="form-check-input me-2" type="radio" name="caption_preset"
+                                               id="preset-radio-{{ preset_key }}" value="{{ preset_key }}"
+                                               {{ 'checked' if loop.first else '' }}>
+                                        <label class="form-check-label fw-bold small" for="preset-radio-{{ preset_key }}">
+                                            {{ preset_info.label }}
+                                        </label>
+                                    </div>
+                                    <div class="caption-preview-box p-2 rounded my-1" style="background-color: #000; min-height: 48px; display: flex; align-items: center; justify-content: center;">
+                                        <span style="{{ preset_info.css }}">{{ preset_info.sample|safe }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="caption_font" class="form-label font-weight-bold fw-bold">Fonte da Legenda</label>
+                                <select class="form-select bg-dark text-light border-secondary" id="caption_font" name="caption_font">
+                                    {% for font in caption_fonts %}
+                                    <option value="{{ font }}" {{ 'selected' if font == 'Montserrat' else '' }}>{{ font }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label font-weight-bold fw-bold">Capitalização do Texto</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="casing_mode" id="casing_uppercase" value="uppercase" checked autocomplete="off">
+                                    <label class="btn btn-outline-cyber" for="casing_uppercase">
+                                        <i class="fas fa-font me-1"></i>UPPERCASE
+                                    </label>
+                                    <input type="radio" class="btn-check" name="casing_mode" id="casing_titlecase" value="titlecase" autocomplete="off">
+                                    <label class="btn btn-outline-cyber" for="casing_titlecase">
+                                        <i class="fas fa-text-height me-1"></i>TitleCase Gramatical
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-magenta btn-lg py-3 fw-bold shadow-lg">
+                            <i class="fas fa-bolt me-2"></i>Iniciar Processamento de Vídeos
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function selectCaptionPreset(presetKey) {
+    const radio = document.getElementById('preset-radio-' + presetKey);
+    if (radio) radio.checked = true;
+    document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('border-info', 'bg-dark'));
+    const card = document.getElementById('preset-card-' + presetKey);
+    if (card) card.classList.add('border-info');
+}
+
+function toggleAspectRatioLimits() {
+    const isVertical = document.getElementById('ratio_9_16').checked;
+    const maxDurationInput = document.getElementById('max_duration');
+    const helpText = document.getElementById('max_duration_help');
+
+    if (isVertical) {
+        maxDurationInput.max = 60;
+        if (parseInt(maxDurationInput.value) > 60) maxDurationInput.value = 60;
+        if (helpText) helpText.textContent = 'Até 60s (1 min) no formato vertical 9:16';
+    } else {
+        maxDurationInput.max = 300;
+        if (parseInt(maxDurationInput.value) === 60) maxDurationInput.value = 180;
+        if (helpText) helpText.textContent = 'Até 300s (5 min) no formato horizontal 16:9';
+    }
+}
+
+function toggleSourceInput() {
+    const isYoutube = document.getElementById('source_youtube').checked;
+    const youtubeContainer = document.getElementById('youtube_container');
+    const fileContainer = document.getElementById('file_container');
+    const urlsInput = document.getElementById('urls');
+    const filesInput = document.getElementById('video_files');
+
+    if (isYoutube) {
+        youtubeContainer.style.display = 'block';
+        fileContainer.style.display = 'none';
+        urlsInput.required = true;
+        filesInput.required = false;
+        filesInput.value = '';
+    } else {
+        youtubeContainer.style.display = 'none';
+        fileContainer.style.display = 'block';
+        urlsInput.required = false;
+        filesInput.required = true;
+        urlsInput.value = '';
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    toggleSourceInput();
+    toggleAspectRatioLimits();
+});
+</script>
+{% endblock %}

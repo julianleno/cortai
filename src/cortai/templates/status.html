@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}
+Status do Processamento — Cortaí
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-md-12">
+        <div class="card card-cortai p-4 mb-4">
+            <div class="card-body">
+                <!-- Header with Action Control Buttons (Pausar / Retomar / Cancelar) -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+                    <div>
+                        <h4 class="fw-bold mb-1">Processamento de Vídeo</h4>
+                        <small class="text-muted">ID do Projeto: {{ job.id }}</small>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        {% if job.status in ('queued', 'processing') %}
+                        <form method="POST" action="{{ url_for('pause_job', job_id=job.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-pause me-1"></i>Pausar
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline" onsubmit="return confirm('Deseja realmente cancelar este processamento?');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-stop-circle me-1"></i>Cancelar
+                            </button>
+                        </form>
+                        {% elif job.status == 'paused' %}
+                        <form method="POST" action="{{ url_for('resume_job', job_id=job.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="fas fa-play me-1"></i>Retomar
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline" onsubmit="return confirm('Deseja realmente cancelar este processamento?');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-stop-circle me-1"></i>Cancelar
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        <a href="{{ url_for('projects') }}" class="btn btn-outline-cortai btn-sm">
+                            <i class="fas fa-layer-group me-1"></i>Ver Projetos
+                        </a>
+                    </div>
+                </div>
+
+                {% if job.status in ('queued', 'processing', 'paused') %}
+                <!-- Animated Stage Loading Screen with Smooth Progress -->
+                <div class="text-center py-4 my-2">
+                    <div class="position-relative d-inline-block mb-4">
+                        <svg width="130" height="130" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>
+                            <circle id="progress-ring" cx="60" cy="60" r="52" fill="none" stroke="#FF6A2B" stroke-width="8"
+                                    stroke-dasharray="326.7" stroke-dashoffset="{{ 326.7 - (326.7 * job.progress / 100) }}"
+                                    stroke-linecap="round" style="transition: stroke-dashoffset 0.3s linear;"/>
+                        </svg>
+                        <div class="position-absolute top-50 start-50 translate-middle text-center">
+                            <span class="fs-3 fw-bold text-light" id="progress-text">{{ job.progress }}%</span>
+                            <div class="small text-muted" style="font-size: 0.72rem;" id="progress-eta">Progresso real</div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-2" id="stage-status-title">
+                        {% if job.status == 'paused' %}
+                        <span class="text-warning"><i class="fas fa-pause-circle me-2"></i>Processamento Pausado</span>
+                        {% else %}
+                        Baixando fluxo de mídia do vídeo...
+                        {% endif %}
+                    </h5>
+                    <p class="text-muted small mb-4" id="stage-sub-description">
+                        {% if job.status == 'paused' %}Clique em Retomar a qualquer momento para continuar de onde parou.{% else %}Progresso contínuo em tempo real acelerado.{% endif %}
+                    </p>
+
+                    <!-- 5 Animated Pipeline Stages -->
+                    <div class="d-flex flex-wrap justify-content-center gap-2 max-w-lg mx-auto mb-3">
+                        <div id="stage-1" class="stage-pill {{ 'completed' if job.progress >= 30 else ('active' if job.progress >= 10 else '') }}">
+                            <i class="fas {{ 'fa-check' if job.progress >= 30 else 'fa-download' }}"></i>
+                            <span>1. Download Mídia</span>
+                        </div>
+                        <div id="stage-2" class="stage-pill {{ 'completed' if job.progress >= 40 else ('active' if job.progress >= 30 else '') }}">
+                            <i class="fas {{ 'fa-check' if job.progress >= 40 else 'fa-microphone' }}"></i>
+                            <span>2. Transcrição IA</span>
+                        </div>
+                        <div id="stage-3" class="stage-pill {{ 'completed' if job.progress >= 50 else ('active' if job.progress >= 40 else '') }}">
+                            <i class="fas {{ 'fa-check' if job.progress >= 50 else 'fa-user-astronaut' }}"></i>
+                            <span>3. Lip-Sync & Rosto</span>
+                        </div>
+                        <div id="stage-4" class="stage-pill {{ 'completed' if job.progress >= 75 else ('active' if job.progress >= 50 else '') }}">
+                            <i class="fas {{ 'fa-check' if job.progress >= 75 else 'fa-closed-captioning' }}"></i>
+                            <span>4. Legenda & Moldura</span>
+                        </div>
+                        <div id="stage-5" class="stage-pill {{ 'completed' if job.progress >= 100 else ('active' if job.progress >= 75 else '') }}">
+                            <i class="fas {{ 'fa-check' if job.progress >= 100 else 'fa-film' }}"></i>
+                            <span>5. Exportação Clipes</span>
+                        </div>
+                    </div>
+                </div>
+                {% elif job.status == 'cancelled' %}
+                <div class="alert alert-warning border-0 rounded-4 shadow-sm p-3">
+                    <i class="fas fa-exclamation-circle me-2"></i><strong>Processamento Cancelado:</strong> Este projeto foi interrompido a pedido do usuário.
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('index') }}" class="btn btn-caju">Novo Processamento</a>
+                </div>
+                {% elif job.status == 'interrupted' %}
+                <div class="alert alert-warning border-0 rounded-4 shadow-sm p-3">
+                    <i class="fas fa-plug me-2"></i><strong>Processamento interrompido:</strong> {{ job.error or 'O aplicativo foi reiniciado durante este projeto.' }}
+                </div>
+                {% elif job.status == 'failed' %}
+                <div class="alert alert-danger border-0 rounded-4 shadow-sm p-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i><strong>Erro no processamento:</strong> {{ job.error }}
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('index') }}" class="btn btn-caju">Tentar Novamente</a>
+                </div>
+                {% elif job.status == 'partial' %}
+                <div class="alert alert-warning border-0 rounded-4 shadow-sm p-3">
+                    <i class="fas fa-exclamation-circle me-2"></i><strong>Processamento parcial:</strong>
+                    {{ rendered_count }} de {{ clips|length }} clipe(s) foram gerados. {{ job.error or '' }}
+                </div>
+                {% elif job.status == 'completed' %}
+                <div class="alert alert-success border-0 rounded-4 shadow-sm p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <i class="fas fa-check-circle me-2"></i><strong>Processamento Concluído!</strong> {{ rendered_count }} clipe(s) gerados com sucesso.
+                    </div>
+                    <span class="badge bg-success px-3 py-2">Pronto para Download</span>
+                </div>
+                {% endif %}
+
+                <!-- Rendered Clips Grid with Video Preview & Interactive Crop Adjustment -->
+                {% if clips %}
+                <h5 class="fw-bold mt-4 mb-3"><i class="fas fa-play-circle text-caju me-2"></i>Clipes Gerados:</h5>
+                <div class="row g-4" id="clips-gallery">
+                    {% for clip in clips %}
+                    <div class="col-md-6" data-clip-id="{{ clip.id }}">
+                        <div class="card card-cortai h-100 p-3">
+                            <!-- Embedded Video Preview Player -->
+                            {% if clip.status == 'rendered' and clip.result_file %}
+                            <div class="mb-3 rounded-4 overflow-hidden position-relative bg-black text-center" style="min-height: 280px; display: flex; align-items: center; justify-content: center;">
+                                <video controls preload="metadata" src="{{ url_for('download_clip', clip_id=clip.id) }}"
+                                       style="width: 100%; max-height: 380px; object-fit: contain; border-radius: 12px;"></video>
+                            </div>
+                            {% else %}
+                            <div class="mb-3 rounded-4 bg-dark d-flex align-items-center justify-content-center text-muted" style="height: 240px; border: 1px dashed var(--border-dark);">
+                                {% if clip.status == 'processing' %}
+                                <div class="text-center">
+                                    <div class="spinner-border text-warning mb-2" role="status"></div>
+                                    <div>Renderizando clipe...</div>
+                                </div>
+                                {% elif clip.status == 'failed' %}
+                                <div class="text-center text-danger px-3"><i class="fas fa-exclamation-triangle me-1"></i>{{ clip.error or 'Falha ao renderizar' }}</div>
+                                {% else %}
+                                <div>Aguardando processamento</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="fw-bold mb-0 text-truncate me-2" id="title-text-{{ clip.id }}" style="max-width: 75%;">
+                                    {{ clip.title or 'Clipe sugerido' }}
+                                </h6>
+                                {% if clip.clip_score is not none %}
+                                <span class="badge bg-danger rounded-pill px-2 py-1">Score {{ '%.1f'|format(clip.clip_score) }}</span>
+                                {% endif %}
+                            </div>
+
+                            {% if clip.justificativa and '[' in clip.justificativa and ']' in clip.justificativa %}
+                            <div class="mb-2">
+                                <span class="badge bg-warning text-dark px-2 py-1 me-1"><i class="fas fa-lightbulb me-1"></i>{{ clip.justificativa.split(']')[0].replace('[', '') }}</span>
+                                <span class="badge bg-secondary text-white px-2 py-1"><i class="fas fa-microchip me-1"></i>{{ clip.source or 'local' }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if clip.hook %}
+                            <p class="small text-muted mb-2"><em id="hook-text-{{ clip.id }}">"{{ clip.hook }}"</em></p>
+                            {% endif %}
+
+                            <div class="mb-3 d-flex flex-wrap gap-2">
+                                {% if clip.title %}
+                                <button type="button" class="btn btn-outline-cortai btn-sm py-1 px-2"
+                                        onclick="copyTextToClipboard('title-text-{{ clip.id }}', this)">
+                                    <i class="fas fa-copy me-1"></i>Copiar Título
+                                </button>
+                                {% endif %}
+                                {% if clip.hook %}
+                                <button type="button" class="btn btn-outline-cortai btn-sm py-1 px-2"
+                                        onclick="copyTextToClipboard('hook-text-{{ clip.id }}', this)">
+                                    <i class="fas fa-quote-right me-1"></i>Copiar Gancho
+                                </button>
+                                {% endif %}
+                            </div>
+
+                            <div class="mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div>
+                                    {% if clip.status == 'rendered' %}
+                                    <a href="{{ url_for('download_clip', clip_id=clip.id) }}" class="btn btn-caju btn-sm">
+                                        <i class="fas fa-download me-1"></i>Baixar Vídeo
+                                    </a>
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex gap-1">
+                                    {% if clip.status in ('rendered', 'failed') %}
+                                    <button type="button" class="btn btn-outline-info btn-sm" onclick="openCropModal('{{ clip.id }}', {{ clip.crop_x_pct if clip.crop_x_pct is not none else 50 }})">
+                                        <i class="fas fa-crop-alt me-1"></i>Ajustar Crop
+                                    </button>
+                                    <a href="{{ url_for('edit_transcript', clip_id=clip.id) }}" class="btn btn-outline-cortai btn-sm">
+                                        <i class="fas fa-pen me-1"></i>Legenda
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if clip.status in ('rendered', 'failed') and templates %}
+                            <form method="POST" action="{{ url_for('rerender_clip', clip_id=clip.id) }}" class="mt-3 d-flex gap-2">
+                                <select class="form-select form-select-sm bg-dark text-light border-secondary" name="template_id" aria-label="Template para re-renderizar">
+                                    <option value="">Configuração original</option>
+                                    {% for tpl in templates %}
+                                    <option value="{{ tpl.id }}" {{ 'selected' if clip.template_id == tpl.id else '' }}>{{ tpl.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-outline-warning btn-sm text-nowrap"><i class="fas fa-sync-alt me-1"></i>Re-renderizar</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Crop Adjustment Modal -->
+<div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content card-cortai border-0 p-3">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-crop-alt text-info me-2"></i>Ajuste Lateral do Enquadramento (Crop 9:16)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="text-muted small mb-3">Arraste o controle deslizante abaixo para ajustar a posição horizontal do corte (0% = Esquerda, 50% = Centro, 100% = Direita).</p>
+
+                <!-- Interactive Visual Canvas Container -->
+                <div class="position-relative mx-auto rounded-3 overflow-hidden bg-black mb-3" style="max-width: 600px; height: 300px; border: 2px solid var(--border-dark);">
+                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="background: linear-gradient(135deg, #1e1e24 0%, #0f0f12 100%);">
+                        <i class="fas fa-video fa-2x opacity-25"></i>
+                    </div>
+
+                    <!-- Draggable 9:16 Crop Box Overlay -->
+                    <div id="crop_overlay_box" class="position-absolute top-0 bottom-0 border border-3 border-cyan shadow-lg"
+                         style="width: 33.75%; left: 33.125%; border-color: #06B6D4 !important; background: rgba(6, 182, 212, 0.15); cursor: move;">
+                        <span class="badge bg-info text-dark position-absolute top-0 start-50 translate-middle-x mt-2 fw-bold">Corte 9:16</span>
+                    </div>
+                </div>
+
+                <form id="cropForm" method="POST" action="">
+                    <div class="mb-3 px-4">
+                        <label for="crop_x_range" class="form-label font-weight-bold fw-bold d-flex justify-content-between">
+                            <span>Posição do Corte Horizontal:</span>
+                            <span id="crop_pct_label" class="text-info fw-bold">50% (Centro)</span>
+                        </label>
+                        <input type="range" class="form-range" id="crop_x_range" name="crop_x_pct" min="0" max="100" value="50" oninput="updateCropOverlay(this.value)">
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-cortai" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-caju"><i class="fas fa-check me-1"></i>Re-renderizar Enquadramento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const jobId = "{{ job.id }}";
+    let targetProgress = {{ job.progress }};
+    let displayedProgress = {{ job.progress }};
+    const jobDone = {{ 'true' if job.status in ('completed', 'partial', 'failed', 'cancelled', 'interrupted') else 'false' }};
+    let isPaused = {{ 'true' if job.status == 'paused' else 'false' }};
+
+    function copyTextToClipboard(elementId, btnElement) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        let text = el.innerText || el.textContent;
+        text = text.replace(/^"|"$/g, '').trim();
+
+        navigator.clipboard.writeText(text).then(function() {
+            const originalHtml = btnElement.innerHTML;
+            btnElement.innerHTML = '<i class="fas fa-check me-1"></i>Copiado!';
+            setTimeout(function() { btnElement.innerHTML = originalHtml; }, 2000);
+        });
+    }
+
+    function openCropModal(clipId, cropPct) {
+        const form = document.getElementById('cropForm');
+        form.action = '/clips/' + clipId + '/adjust-crop';
+        const range = document.getElementById('crop_x_range');
+        range.value = cropPct;
+        updateCropOverlay(cropPct);
+        const modal = new bootstrap.Modal(document.getElementById('cropModal'));
+        modal.show();
+    }
+
+    function updateCropOverlay(pct) {
+        const box = document.getElementById('crop_overlay_box');
+        const label = document.getElementById('crop_pct_label');
+        if (box) {
+            const leftPct = (pct / 100) * 66.25;
+            box.style.left = leftPct + '%';
+        }
+        if (label) {
+            label.textContent = pct + '% (' + (pct < 45 ? 'Esquerda' : (pct > 55 ? 'Direita' : 'Centro')) + ')';
+        }
+    }
+
+    function updateUIProgress(pct) {
+        const progressText = document.getElementById('progress-text');
+        const progressRing = document.getElementById('progress-ring');
+        const titleEl = document.getElementById('stage-status-title');
+
+        const rounded = Math.round(pct);
+        if (progressText) progressText.textContent = rounded + '%';
+        if (progressRing) {
+            const circumference = 326.7;
+            const offset = circumference - (circumference * pct / 100);
+            progressRing.style.strokeDashoffset = offset;
+        }
+
+        if (titleEl && !isPaused) {
+            if (pct < 30) {
+                titleEl.textContent = 'Baixando fluxo de mídia do vídeo...';
+            } else if (pct < 40) {
+                titleEl.textContent = 'Transcrevendo fala com marcas de tempo por palavra...';
+            } else if (pct < 50) {
+                titleEl.textContent = 'Analisando rostos, movimento labial e falante ativo...';
+            } else if (pct < 75) {
+                titleEl.textContent = 'Gerando legendas estilizadas e enquadramento de moldura...';
+            } else {
+                titleEl.textContent = 'Renderizando e exportando os clipes verticais finais...';
+            }
+        }
+    }
+
+    // Smooth Continuous Micro-Increment Loop
+    if (!jobDone) {
+        setInterval(function() {
+            if (!isPaused && displayedProgress < 98) {
+                if (displayedProgress < targetProgress) {
+                    displayedProgress += 0.8;
+                }
+                updateUIProgress(displayedProgress);
+            }
+        }, 250);
+
+        const statusInterval = setInterval(function() {
+            fetch(`/api/status/${jobId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (['completed', 'partial', 'failed', 'cancelled', 'interrupted'].includes(data.status)) {
+                        clearInterval(statusInterval);
+                        window.location.reload();
+                    } else {
+                        isPaused = (data.status === 'paused');
+                        targetProgress = data.progress;
+                        if (data.progress > displayedProgress) {
+                            displayedProgress = data.progress;
+                        }
+                        updateUIProgress(displayedProgress);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching status:', error);
+                });
+        }, 2000);
+    }
+</script>
+{% endblock %}

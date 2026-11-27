@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ 'Editar Template' if template else 'Novo Template' }} — Cortaí
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        <div class="card card-cyber p-4">
+            <div class="card-body">
+                <h4 class="fw-bold mb-3"><i class="fas fa-sliders text-cyan me-2"></i>{{ 'Editar Template de Canal' if template else 'Novo Template de Canal' }}</h4>
+                <p class="text-muted small mb-4">Personalize fontes, estilos de legenda, layout de moldura e marca d'água para reutilizar em todos os seus vídeos.</p>
+
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="name" class="form-label font-weight-bold fw-bold">Nome do Template</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary p-2" id="name" name="name" required
+                               placeholder="Ex: Canal Principal Shorts" value="{{ template.name if template else '' }}">
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label for="layout" class="form-label font-weight-bold fw-bold">Layout & Moldura</label>
+                            <select class="form-select bg-dark text-light border-secondary p-2" id="layout" name="layout">
+                                {% for opt in layouts %}
+                                <option value="{{ opt }}" {{ 'selected' if cfg.layout == opt else '' }}>
+                                    {% if opt == 'auto' %}👤 Automático (Segue o rosto)
+                                    {% elif opt == 'active_speaker' %}🗣️ Ativo por Fala (Lip-Sync Troca de Rosto)
+                                    {% elif opt == 'card_frame' %}📇 Moldura Social Card (Estilo Twitter/Instagram)
+                                    {% elif opt == 'header_footer_frame' %}🖼️ Moldura Editorial (Topo Título + Rodapé)
+                                    {% elif opt == 'blurred_background' %}🌫️ Fundo Desfocado (Cena Inteira)
+                                    {% elif opt == 'all_faces' %}👥 Manter Todos os Rostos (Empilhado)
+                                    {% else %}🎯 Crop Central Fixo
+                                    {% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="caption_font" class="form-label font-weight-bold fw-bold">Fonte da Legenda</label>
+                            <select class="form-select bg-dark text-light border-secondary p-2" id="caption_font" name="caption_font">
+                                {% for font in caption_fonts %}
+                                <option value="{{ font }}" {{ 'selected' if cfg.caption_font == font else '' }}>{{ font }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label for="caption_preset" class="form-label font-weight-bold fw-bold">Preset Visual da Legenda</label>
+                            <select class="form-select bg-dark text-light border-secondary p-2" id="caption_preset" name="caption_preset">
+                                {% for opt in caption_presets %}
+                                <option value="{{ opt }}" {{ 'selected' if cfg.caption_preset == opt else '' }}>
+                                    {% if caption_presets_metadata.get(opt) %}{{ caption_presets_metadata[opt].label }} ({{ opt }}){% else %}{{ opt }}{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="casing_mode" class="form-label font-weight-bold fw-bold">Capitalização do Texto</label>
+                            <select class="form-select bg-dark text-light border-secondary p-2" id="casing_mode" name="casing_mode">
+                                <option value="uppercase" {{ 'selected' if cfg.casing_mode == 'uppercase' else '' }}>UPPERCASE (TUDO MAIÚSCULO)</option>
+                                <option value="titlecase" {{ 'selected' if cfg.casing_mode in ('titlecase', 'first_letter') else '' }}>TitleCase Gramatical</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Watermark Options -->
+                    <div class="mb-4 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-dark);">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" role="switch" id="watermark_enabled" name="watermark_enabled"
+                                   {{ 'checked' if cfg.watermark.enabled else '' }}>
+                            <label class="form-check-label fw-bold" for="watermark_enabled">Ativar Marca d'Água no Vídeo</label>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="watermark_position" class="form-label small">Posição</label>
+                                <select class="form-select form-select-sm bg-dark text-light border-secondary" id="watermark_position" name="watermark_position">
+                                    <option value="top-left" {{ 'selected' if cfg.watermark.position == 'top-left' else '' }}>Topo Esquerda</option>
+                                    <option value="top-right" {{ 'selected' if cfg.watermark.position == 'top-right' else '' }}>Topo Direita</option>
+                                    <option value="bottom-left" {{ 'selected' if cfg.watermark.position == 'bottom-left' else '' }}>Rodapé Esquerda</option>
+                                    <option value="bottom-right" {{ 'selected' if cfg.watermark.position == 'bottom-right' else '' }}>Rodapé Direita</option>
+                                    <option value="center" {{ 'selected' if cfg.watermark.position == 'center' else '' }}>Centro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="watermark_opacity" class="form-label small">Opacidade (0.1 a 1.0)</label>
+                                <input type="number" class="form-control form-control-sm bg-dark text-light border-secondary" id="watermark_opacity" name="watermark_opacity"
+                                       step="0.1" min="0.1" max="1.0" value="{{ cfg.watermark.opacity }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{{ url_for('templates_list') }}" class="btn btn-outline-cyber">Cancelar</a>
+                        <button type="submit" class="btn btn-magenta fw-bold px-4">
+                            <i class="fas fa-check me-1"></i>Salvar Template
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

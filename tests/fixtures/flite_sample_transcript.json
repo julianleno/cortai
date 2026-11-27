@@ -1,0 +1,131 @@
+{
+  "language": "en",
+  "language_probability": 1,
+  "duration": 5.944375,
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0.0,
+      "start": 0.0,
+      "end": 5.6,
+      "text": " This is the shortest sentence, here is the second sentence with more words, and the third one to finish.",
+      "words": [
+        {
+          "word": " This",
+          "start": 0.0,
+          "end": 0.4,
+          "probability": 0.7670908570289612
+        },
+        {
+          "word": " is",
+          "start": 0.4,
+          "end": 0.54,
+          "probability": 0.9976692795753479
+        },
+        {
+          "word": " the",
+          "start": 0.54,
+          "end": 0.72,
+          "probability": 0.8152638077735901
+        },
+        {
+          "word": " shortest",
+          "start": 0.72,
+          "end": 1.02,
+          "probability": 0.8630160093307495
+        },
+        {
+          "word": " sentence,",
+          "start": 1.02,
+          "end": 1.7,
+          "probability": 0.9922000765800476
+        },
+        {
+          "word": " here",
+          "start": 2.04,
+          "end": 2.2,
+          "probability": 0.9293488264083862
+        },
+        {
+          "word": " is",
+          "start": 2.2,
+          "end": 2.36,
+          "probability": 0.9550188779830933
+        },
+        {
+          "word": " the",
+          "start": 2.36,
+          "end": 2.48,
+          "probability": 0.8668195605278015
+        },
+        {
+          "word": " second",
+          "start": 2.48,
+          "end": 2.82,
+          "probability": 0.9562997817993164
+        },
+        {
+          "word": " sentence",
+          "start": 2.82,
+          "end": 3.34,
+          "probability": 0.9988316893577576
+        },
+        {
+          "word": " with",
+          "start": 3.34,
+          "end": 3.56,
+          "probability": 0.9799787402153015
+        },
+        {
+          "word": " more",
+          "start": 3.56,
+          "end": 3.78,
+          "probability": 0.972102165222168
+        },
+        {
+          "word": " words,",
+          "start": 3.78,
+          "end": 4.04,
+          "probability": 0.9848453998565674
+        },
+        {
+          "word": " and",
+          "start": 4.4,
+          "end": 4.56,
+          "probability": 0.9934240579605103
+        },
+        {
+          "word": " the",
+          "start": 4.56,
+          "end": 4.68,
+          "probability": 0.48336419463157654
+        },
+        {
+          "word": " third",
+          "start": 4.68,
+          "end": 4.96,
+          "probability": 0.9813389778137207
+        },
+        {
+          "word": " one",
+          "start": 4.96,
+          "end": 5.1,
+          "probability": 0.8009034991264343
+        },
+        {
+          "word": " to",
+          "start": 5.1,
+          "end": 5.28,
+          "probability": 0.9696218967437744
+        },
+        {
+          "word": " finish.",
+          "start": 5.28,
+          "end": 5.6,
+          "probability": 0.8617371916770935
+        }
+      ]
+    }
+  ],
+  "text": ""
+}

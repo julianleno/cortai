@@ -1,0 +1,13 @@
+# Binary assets must never be text-converted (CRLF/LF) by git -- this is
+# exactly what corrupted src/cortai/assets/watermark.png in the original
+# commit (core.autocrlf=true + no .gitattributes).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.onnx binary
+*.db binary
+*.pyc binary
+*.pdf binary
+*.zip binary

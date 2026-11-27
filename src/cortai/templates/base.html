@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cortaí ✂️ — IA de Cortes Inteligentes{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect width="64" height="64" rx="16" fill="#FF6A2B"/%3E%3Cpath d="M20.86,16.16 L20.86,46.16 L30.10,40.72 L36.21,25.19 Z" fill="#16140F"/%3E%3Cpath d="M34.98,41.00 L51.24,31.44 L41.09,25.47 Z" fill="#16140F"/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Anton&family=Bebas+Neue&family=Impact&family=Inter:wght@400;700;900&family=Montserrat:wght@600;800;900&family=Outfit:wght@600;800&family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Cortaí Design System */
+        :root {
+            /* Paleta Cortaí */
+            --caju: #FF6A2B;          /* cor principal */
+            --caju-hover: #FF8148;
+            --tinta: #16140F;         /* texto sobre o caju */
+            --mar: #12B5A6;           /* destaque secundário */
+            --sol: #FFC93C;           /* realces e legendas */
+            --bg-dark: #111113;
+            --surface-dark: #18181C;
+            --surface-card: #202025;
+            --border-dark: #2C2C33;
+            --text-main: #F5F3EF;
+            --text-muted: #A8A29E;
+            --accent-green: #10B981;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --font-display: 'Bricolage Grotesque', 'DM Sans', sans-serif;
+        }
+
+        [data-bs-theme="light"] {
+            --bg-dark: #FBF7F2;
+            --surface-dark: #FFFFFF;
+            --surface-card: #F4EEE6;
+            --border-dark: #E7DED2;
+            --text-main: #1B1A17;
+            --text-muted: #6B6559;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        h1, h2, h3, h4, .display-font {
+            font-family: var(--font-display);
+            letter-spacing: -0.02em;
+        }
+
+        .text-caju { color: var(--caju) !important; }
+
+        /* Glassmorphic Navbar */
+        .navbar-cortai {
+            background: rgba(17, 17, 19, 0.82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-dark);
+            padding: 0.8rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        [data-bs-theme="light"] .navbar-cortai {
+            background: rgba(251, 247, 242, 0.9);
+        }
+
+        .brand-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .brand-logo-svg {
+            width: 40px;
+            height: 40px;
+            transition: transform 0.3s ease;
+        }
+
+        .brand-logo-container:hover .brand-logo-svg {
+            transform: scale(1.08) rotate(-4deg);
+        }
+
+        .brand-name {
+            font-family: var(--font-display);
+            font-size: 1.55rem;
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            color: var(--text-main);
+        }
+
+        /* Botões Caju */
+        .btn-caju {
+            background-color: var(--caju);
+            color: var(--tinta);
+            border: none;
+            font-weight: 700;
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 14px rgba(255, 106, 43, 0.35);
+            transition: all 0.25s ease;
+        }
+
+        .btn-caju:hover {
+            background-color: var(--caju-hover);
+            color: var(--tinta);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 106, 43, 0.5);
+        }
+
+        .btn-outline-cortai {
+            border: 1px solid var(--border-dark);
+            color: var(--text-main);
+            background: var(--surface-dark);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-cortai:hover {
+            background: rgba(255, 106, 43, 0.1);
+            border-color: var(--caju);
+            color: var(--caju);
+        }
+
+        /* Cards & Bento Grid */
+        .card-cortai {
+            background: var(--surface-dark);
+            border: 1px solid var(--border-dark);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.3s ease, transform 0.25s ease;
+        }
+
+        .card-cortai:hover {
+            border-color: rgba(255, 106, 43, 0.3);
+        }
+
+        /* Stage Progress Indicator */
+        .stage-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 30px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-dark);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .stage-pill.active {
+            border-color: var(--caju);
+            color: var(--text-main);
+            background: rgba(255, 106, 43, 0.12);
+            box-shadow: 0 0 12px rgba(255, 106, 43, 0.2);
+        }
+
+        .stage-pill.completed {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .theme-toggle-btn {
+            background: var(--surface-dark);
+            border: 1px solid var(--border-dark);
+            color: var(--text-main);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: var(--caju);
+            color: var(--caju);
+        }
+
+        /* Tema claro: corrige elementos que usavam cores fixas do tema escuro */
+        [data-bs-theme="light"] .navbar-cortai .nav-link.text-light {
+            color: var(--text-main) !important;
+        }
+
+        [data-bs-theme="light"] .form-control.bg-dark,
+        [data-bs-theme="light"] .form-select.bg-dark {
+            background-color: var(--surface-dark) !important;
+            color: var(--text-main) !important;
+            border-color: var(--border-dark) !important;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border-dark);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-cortai">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="brand-logo-container" href="{{ url_for('index') }}">
+                <!-- Marca Cortaí: play cortado -->
+                <svg class="brand-logo-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect width="64" height="64" rx="16" fill="#FF6A2B"/>
+                    <path d="M20.86,16.16 L20.86,46.16 L30.10,40.72 L36.21,25.19 Z" fill="#16140F"/>
+                    <path d="M34.98,41.00 L51.24,31.44 L41.09,25.47 Z" fill="#16140F"/>
+                </svg>
+                <span class="brand-name">cortaí</span>
+                <span class="badge rounded-pill ms-1 px-2 py-1 small fw-bold" style="background-color: var(--caju) !important; color: var(--tinta);">v{{ app_version or '1.5.0' }}</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <a class="nav-link text-decoration-none text-light opacity-75 hover-opacity-100 me-1" href="{{ url_for('index') }}">
+                    <i class="fas fa-magic text-caju me-1"></i>Novo Processamento
+                </a>
+                <a class="nav-link text-decoration-none text-light opacity-75 hover-opacity-100 me-1" href="{{ url_for('projects') }}">
+                    <i class="fas fa-layer-group me-1"></i>Meus Projetos
+                </a>
+                <a class="nav-link text-decoration-none text-light opacity-75 hover-opacity-100 me-1" href="{{ url_for('templates_list') }}">
+                    <i class="fas fa-sliders me-1"></i>Templates
+                </a>
+                <a class="nav-link text-decoration-none text-light opacity-75 hover-opacity-100 me-1" href="{{ url_for('settings_route') }}">
+                    <i class="fas fa-cog me-1"></i>Configurações
+                </a>
+                <a class="nav-link text-decoration-none text-light opacity-75 hover-opacity-100 me-2" href="{{ url_for('about') }}">
+                    <i class="fas fa-info-circle me-1"></i>Sobre
+                </a>
+
+                <!-- Theme Switcher Toggle (Dark / Light) -->
+                <button type="button" class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Alternar Tema Claro/Escuro">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show border-0 rounded-4 shadow-sm" role="alert">
+                <i class="fas {{ 'fa-exclamation-circle' if category == 'error' else 'fa-check-circle' }} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer>
+        <div class="container text-center">
+            <p class="mb-1">&copy; {{ now().year }} Cortaí <strong>v{{ app_version or '1.5.0' }}</strong> — Inteligência Artificial de Cortes de Vídeo.</p>
+            <small class="text-muted">Software livre (GPL-3.0) com processamento local-first.</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun text-warning';
+            }
+            localStorage.setItem('cortai_theme', theme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
+        }
+
+        // Initialize Theme from localStorage
+        const savedTheme = localStorage.getItem('cortai_theme') || 'dark';
+        applyTheme(savedTheme);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

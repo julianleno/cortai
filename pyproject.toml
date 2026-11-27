@@ -1,0 +1,45 @@
+[project]
+name = "cortai"
+version = "1.5.0"
+description = "Aplicação local-first que transforma vídeos longos em clipes verticais prontos para YouTube Shorts, TikTok e Instagram Reels."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [
+    {name = "Julian Leno"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Multimedia :: Video",
+]
+dependencies = [
+    "yt-dlp>=2024.7.10",
+    "faster-whisper>=0.10.0",
+    "ffmpeg-python>=0.2.0",
+    "Flask>=3.0.0",
+    "python-dotenv>=1.0.0",
+    "tqdm>=4.66.0",
+    "numpy>=1.26.0",
+    "srt>=3.5.3",
+    "httpx>=0.28.0",
+    "opencv-python-headless>=4.9.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/julianleno/cortai"
+Issues = "https://github.com/julianleno/cortai/issues"
+
+[build-system]
+requires = ["setuptools>=77.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "black>=24.0.0",
+    "flake8>=7.0.0",
+    "mypy>=1.8.0"
+]

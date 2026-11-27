@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}
+Configurações & Chaves de API — Cortaí
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9 col-md-11">
+        <div class="card card-cortai p-4 mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fas fa-cog text-caju me-2"></i>Configurações & Chaves de API</h4>
+                        <small class="text-muted">Gerencie suas chaves de inteligência artificial. Se NENHUMA chave for cadastrada, o app executa 100% OFFLINE / LOCAL.</small>
+                    </div>
+                    <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fas fa-shield-alt me-1"></i>Salvo no Banco Local</span>
+                </div>
+
+                <div class="alert alert-info border-0 rounded-4 mb-4 p-3">
+                    <i class="fas fa-info-circle me-2"></i><strong>Modo 100% Offline / Local:</strong> Quando você não informa nenhuma chave de API, o Cortaí usa o algoritmo determinístico local (detecção de frases e fala no áudio) e o Faster-Whisper local. Nenhuma requisição externa é feita!
+                </div>
+
+                <form method="POST">
+                    <!-- Google Gemini API Key -->
+                    <div class="mb-4 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-dark);">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label for="gemini_api_key" class="form-label font-weight-bold fw-bold mb-0">
+                                <i class="fab fa-google text-primary me-2"></i>Google Gemini API Key (Recomendado - Gratuito)
+                            </label>
+                            <a href="https://aistudio.google.com/" target="_blank" class="small text-decoration-none">Obter Chave no Google AI Studio <i class="fas fa-external-link-alt ms-1"></i></a>
+                        </div>
+                        <input type="password" class="form-control bg-dark text-light border-secondary p-2 mb-2" id="gemini_api_key" name="gemini_api_key"
+                               value="{{ settings.get('gemini_api_key', '') }}" placeholder="AIzaSy...">
+                        <small class="text-muted">Modelo padrão: <code>gemini-flash-latest</code></small>
+                    </div>
+
+                    <!-- OpenAI API Key -->
+                    <div class="mb-4 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-dark);">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label for="openai_api_key" class="form-label font-weight-bold fw-bold mb-0">
+                                <i class="fas fa-robot text-success me-2"></i>OpenAI API Key (GPT-4o / GPT-4o-mini)
+                            </label>
+                            <a href="https://platform.openai.com/api-keys" target="_blank" class="small text-decoration-none">Obter Chave na OpenAI <i class="fas fa-external-link-alt ms-1"></i></a>
+                        </div>
+                        <input type="password" class="form-control bg-dark text-light border-secondary p-2 mb-2" id="openai_api_key" name="openai_api_key"
+                               value="{{ settings.get('openai_api_key', '') }}" placeholder="sk-proj-...">
+                        <small class="text-muted">Modelo padrão: <code>gpt-4o-mini</code></small>
+                    </div>
+
+                    <!-- Anthropic API Key -->
+                    <div class="mb-4 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-dark);">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label for="anthropic_api_key" class="form-label font-weight-bold fw-bold mb-0">
+                                <i class="fas fa-brain text-warning me-2"></i>Anthropic API Key (Claude 3.5 Haiku / Sonnet)
+                            </label>
+                            <a href="https://console.anthropic.com/" target="_blank" class="small text-decoration-none">Obter Chave no Anthropic Console <i class="fas fa-external-link-alt ms-1"></i></a>
+                        </div>
+                        <input type="password" class="form-control bg-dark text-light border-secondary p-2 mb-2" id="anthropic_api_key" name="anthropic_api_key"
+                               value="{{ settings.get('anthropic_api_key', '') }}" placeholder="sk-ant-...">
+                        <small class="text-muted">Modelo padrão: <code>claude-3-5-haiku-20241022</code></small>
+                    </div>
+
+                    <!-- NVIDIA NIM API Key -->
+                    <div class="mb-4 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-dark);">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label for="nvidia_nim_api_key" class="form-label font-weight-bold fw-bold mb-0">
+                                <i class="fas fa-microchip text-info me-2"></i>NVIDIA NIM API Key (Fallback Llama 3)
+                            </label>
+                            <a href="https://build.nvidia.com/" target="_blank" class="small text-decoration-none">Obter Chave na NVIDIA <i class="fas fa-external-link-alt ms-1"></i></a>
+                        </div>
+                        <input type="password" class="form-control bg-dark text-light border-secondary p-2 mb-2" id="nvidia_nim_api_key" name="nvidia_nim_api_key"
+                               value="{{ settings.get('nvidia_nim_api_key', '') }}" placeholder="nvapi-...">
+                        <small class="text-muted">Modelo padrão: <code>meta/llama-3.1-8b-instruct</code></small>
+                    </div>
+
+                    <!-- YouTube Cookie Browser Selection (Bypass Anti-Bot) -->
+                    <div class="mb-4 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-dark);">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label for="ytdlp_cookies_browser" class="form-label font-weight-bold fw-bold mb-0">
+                                <i class="fab fa-youtube text-danger me-2"></i>Navegador para Cookies do YouTube (Anti-Bloqueio / Anti-Bot)
+                            </label>
+                        </div>
+                        <select class="form-select bg-dark text-light border-secondary p-2 mb-2" id="ytdlp_cookies_browser" name="ytdlp_cookies_browser">
+                            <option value="auto" {{ 'selected' if settings.get('ytdlp_cookies_browser', 'auto') == 'auto' else '' }}>⚡ Automático (Tenta Chrome, Edge, Firefox, Brave, Opera)</option>
+                            <option value="chrome" {{ 'selected' if settings.get('ytdlp_cookies_browser') == 'chrome' else '' }}>Google Chrome</option>
+                            <option value="edge" {{ 'selected' if settings.get('ytdlp_cookies_browser') == 'edge' else '' }}>Microsoft Edge</option>
+                            <option value="firefox" {{ 'selected' if settings.get('ytdlp_cookies_browser') == 'firefox' else '' }}>Mozilla Firefox</option>
+                            <option value="brave" {{ 'selected' if settings.get('ytdlp_cookies_browser') == 'brave' else '' }}>Brave</option>
+                            <option value="opera" {{ 'selected' if settings.get('ytdlp_cookies_browser') == 'opera' else '' }}>Opera</option>
+                            <option value="disabled" {{ 'selected' if settings.get('ytdlp_cookies_browser') == 'disabled' else '' }}>Desativado (Sem Cookies de Navegador)</option>
+                        </select>
+                        <small class="text-muted">Usado quando o YouTube exige login ou verificação de bot ("Sign in to confirm you're not a bot").</small>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-cortai">Cancelar</a>
+                        <button type="submit" class="btn btn-caju px-4 py-2 fw-bold">
+                            <i class="fas fa-save me-1"></i>Salvar Configurações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

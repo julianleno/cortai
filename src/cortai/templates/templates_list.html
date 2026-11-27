@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}
+Templates de Canal - Cortaí
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Templates de Canal</h4>
+                <a href="{{ url_for('templates_new') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Novo Template
+                </a>
+            </div>
+            <div class="card-body">
+                {% if templates %}
+                <div class="list-group">
+                    {% for tpl in templates %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ tpl.name }}</strong>
+                                <div class="text-muted small">
+                                    layout: {{ tpl.config.layout }} &middot;
+                                    legenda: {{ tpl.config.caption_preset }} &middot;
+                                    watermark: {{ 'ativo' if tpl.config.watermark.enabled else 'desativado' }}
+                                    {% if tpl.config.title %} &middot; título: "{{ tpl.config.title }}"{% endif %}
+                                    {% if tpl.config.cta %} &middot; CTA: "{{ tpl.config.cta }}"{% endif %}
+                                </div>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('templates_edit', template_id=tpl.id) }}" class="btn btn-outline-secondary btn-sm">Editar</a>
+                                <form method="POST" action="{{ url_for('templates_delete', template_id=tpl.id) }}" class="d-inline"
+                                      onsubmit="return confirm('Remover o template {{ tpl.name }}?');">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Remover</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">Nenhum template criado ainda. Crie um para reutilizar layout, legenda e marca d'água entre vídeos.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

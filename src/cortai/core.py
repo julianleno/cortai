@@ -860,9 +860,9 @@ def create_default_watermark() -> str:
     Returns:
         Path to the watermark image
     """
-    watermark_dir = os.path.join(os.path.dirname(__file__), '..', 'assets')
-    os.makedirs(watermark_dir, exist_ok=True)
-    watermark_path = os.path.join(watermark_dir, 'watermark.png')
+    # Gerada na pasta temporária: a pasta do código pode ser só leitura (pacote/.exe)
+    # e gravar lá sujava o repositório a cada execução dos testes.
+    watermark_path = os.path.join(tempfile.gettempdir(), 'cortai_default_watermark.png')
 
     # Create a simple text watermark using ImageMagick or PIL if available
     # For now, we'll create a simple colored rectangle as placeholder

@@ -13,6 +13,7 @@ from . import templates as template_config
 from . import clip_selection
 from . import transcription as transcription_module
 from . import vocabulary as vocabulary_module
+from . import preparo
 from . import updater
 from .config import config
 from .core import download_video, render_clip_from_source
@@ -29,6 +30,8 @@ app.jinja_env.globals['app_version'] = __version__
 logger = logging.getLogger(__name__)
 
 db.init_db(config.DB_PATH, recover_orphans=True)
+preparo.activate_local_ffmpeg()  # FFmpeg portátil instalado pela tela de preparação
+_setup_shown = False  # a tela de preparação abre sozinha uma vez por execução
 
 @app.before_request
 def _ensure_db():
@@ -307,8 +310,35 @@ def rerender_clip_job(clip_id, video_path, template_id):
         logger.exception("Falha ao re-renderizar clipe")
         db.update_clip(config.DB_PATH, clip_id, status='failed', error=str(e))
 
+@app.route('/preparar')
+def preparar():
+    global _setup_shown
+    _setup_shown = True
+    return render_template('preparar.html', preparo=preparo.status())
+
+
+@app.route('/api/preparo')
+def preparo_status():
+    return jsonify(preparo.status())
+
+
+@app.route('/api/preparo/<item>', methods=['POST'])
+def preparo_start(item):
+    if request.headers.get('X-Cortai') != '1':  # barra POST vindo de outro site
+        return jsonify(ok=False, error='Pedido inválido.'), 400
+    if item == 'modelo':
+        preparo.start_model_download()
+    elif item == 'ffmpeg':
+        preparo.install_ffmpeg()
+    else:
+        return jsonify(ok=False, error='Item desconhecido.'), 404
+    return jsonify(ok=True)
+
+
 @app.route('/')
 def index():
+    if not _setup_shown and preparo.needs_setup():
+        return redirect(url_for('preparar'))
     templates_available = db.list_templates(config.DB_PATH)
     # Mesma resolução de chaves que clip_selection.suggest_clips_for_video (banco, depois .env).
     ai_enabled = any(db.get_setting(config.DB_PATH, key, fallback) for key, fallback in (

@@ -55,3 +55,6 @@ Thumbs.db
 # Build / empacotamento
 *.egg-info/
 *.spec
+
+# FFmpeg portátil baixado pela tela de preparação
+/ffmpeg/

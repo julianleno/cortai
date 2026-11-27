@@ -18,6 +18,8 @@ classifiers = [
 dependencies = [
     "yt-dlp>=2024.7.10",
     "faster-whisper>=0.10.0",
+    # av 19 removeu o argumento metadata_errors que o faster-whisper 1.2.x usa ao decodificar o áudio
+    "av>=15,<19",
     "ffmpeg-python>=0.2.0",
     "Flask>=3.0.0",
     "python-dotenv>=1.0.0",

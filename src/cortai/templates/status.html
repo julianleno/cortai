@@ -5,233 +5,186 @@ Status do Processamento — Cortaí
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-10 col-md-12">
-        <div class="card card-cortai p-4 mb-4">
-            <div class="card-body">
-                <!-- Header with Action Control Buttons (Pausar / Retomar / Cancelar) -->
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
-                    <div>
-                        <h4 class="fw-bold mb-1">Processamento de Vídeo</h4>
-                        <small class="text-muted">ID do Projeto: {{ job.id }}</small>
-                    </div>
-
-                    <div class="d-flex align-items-center gap-2">
-                        {% if job.status in ('queued', 'processing') %}
-                        <form method="POST" action="{{ url_for('pause_job', job_id=job.id) }}" class="d-inline">
-                            <button type="submit" class="btn btn-outline-warning btn-sm">
-                                <i class="fas fa-pause me-1"></i>Pausar
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline" onsubmit="return confirm('Deseja realmente cancelar este processamento?');">
-                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                <i class="fas fa-stop-circle me-1"></i>Cancelar
-                            </button>
-                        </form>
-                        {% elif job.status == 'paused' %}
-                        <form method="POST" action="{{ url_for('resume_job', job_id=job.id) }}" class="d-inline">
-                            <button type="submit" class="btn btn-success btn-sm">
-                                <i class="fas fa-play me-1"></i>Retomar
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline" onsubmit="return confirm('Deseja realmente cancelar este processamento?');">
-                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                <i class="fas fa-stop-circle me-1"></i>Cancelar
-                            </button>
-                        </form>
-                        {% endif %}
-
-                        <a href="{{ url_for('projects') }}" class="btn btn-outline-cortai btn-sm">
-                            <i class="fas fa-layer-group me-1"></i>Ver Projetos
-                        </a>
-                    </div>
-                </div>
-
-                {% if job.status in ('queued', 'processing', 'paused') %}
-                <!-- Animated Stage Loading Screen with Smooth Progress -->
-                <div class="text-center py-4 my-2">
-                    <div class="position-relative d-inline-block mb-4">
-                        <svg width="130" height="130" viewBox="0 0 120 120">
-                            <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>
-                            <circle id="progress-ring" cx="60" cy="60" r="52" fill="none" stroke="#FF6A2B" stroke-width="8"
-                                    stroke-dasharray="326.7" stroke-dashoffset="{{ 326.7 - (326.7 * job.progress / 100) }}"
-                                    stroke-linecap="round" style="transition: stroke-dashoffset 0.3s linear;"/>
-                        </svg>
-                        <div class="position-absolute top-50 start-50 translate-middle text-center">
-                            <span class="fs-3 fw-bold text-light" id="progress-text">{{ job.progress }}%</span>
-                            <div class="small text-muted" style="font-size: 0.72rem;" id="progress-eta">Progresso real</div>
-                        </div>
-                    </div>
-
-                    <h5 class="fw-bold mb-2" id="stage-status-title">
-                        {% if job.status == 'paused' %}
-                        <span class="text-warning"><i class="fas fa-pause-circle me-2"></i>Processamento Pausado</span>
-                        {% else %}
-                        Baixando fluxo de mídia do vídeo...
-                        {% endif %}
-                    </h5>
-                    <p class="text-muted small mb-4" id="stage-sub-description">
-                        {% if job.status == 'paused' %}Clique em Retomar a qualquer momento para continuar de onde parou.{% else %}Progresso contínuo em tempo real acelerado.{% endif %}
-                    </p>
-
-                    <!-- 5 Animated Pipeline Stages -->
-                    <div class="d-flex flex-wrap justify-content-center gap-2 max-w-lg mx-auto mb-3">
-                        <div id="stage-1" class="stage-pill {{ 'completed' if job.progress >= 30 else ('active' if job.progress >= 10 else '') }}">
-                            <i class="fas {{ 'fa-check' if job.progress >= 30 else 'fa-download' }}"></i>
-                            <span>1. Download Mídia</span>
-                        </div>
-                        <div id="stage-2" class="stage-pill {{ 'completed' if job.progress >= 40 else ('active' if job.progress >= 30 else '') }}">
-                            <i class="fas {{ 'fa-check' if job.progress >= 40 else 'fa-microphone' }}"></i>
-                            <span>2. Transcrição IA</span>
-                        </div>
-                        <div id="stage-3" class="stage-pill {{ 'completed' if job.progress >= 50 else ('active' if job.progress >= 40 else '') }}">
-                            <i class="fas {{ 'fa-check' if job.progress >= 50 else 'fa-user-astronaut' }}"></i>
-                            <span>3. Lip-Sync & Rosto</span>
-                        </div>
-                        <div id="stage-4" class="stage-pill {{ 'completed' if job.progress >= 75 else ('active' if job.progress >= 50 else '') }}">
-                            <i class="fas {{ 'fa-check' if job.progress >= 75 else 'fa-closed-captioning' }}"></i>
-                            <span>4. Legenda & Moldura</span>
-                        </div>
-                        <div id="stage-5" class="stage-pill {{ 'completed' if job.progress >= 100 else ('active' if job.progress >= 75 else '') }}">
-                            <i class="fas {{ 'fa-check' if job.progress >= 100 else 'fa-film' }}"></i>
-                            <span>5. Exportação Clipes</span>
-                        </div>
-                    </div>
-                </div>
-                {% elif job.status == 'cancelled' %}
-                <div class="alert alert-warning border-0 rounded-4 shadow-sm p-3">
-                    <i class="fas fa-exclamation-circle me-2"></i><strong>Processamento Cancelado:</strong> Este projeto foi interrompido a pedido do usuário.
-                </div>
-                <div class="text-center mt-3">
-                    <a href="{{ url_for('index') }}" class="btn btn-caju">Novo Processamento</a>
-                </div>
-                {% elif job.status == 'interrupted' %}
-                <div class="alert alert-warning border-0 rounded-4 shadow-sm p-3">
-                    <i class="fas fa-plug me-2"></i><strong>Processamento interrompido:</strong> {{ job.error or 'O aplicativo foi reiniciado durante este projeto.' }}
-                </div>
-                {% elif job.status == 'failed' %}
-                <div class="alert alert-danger border-0 rounded-4 shadow-sm p-3">
-                    <i class="fas fa-exclamation-triangle me-2"></i><strong>Erro no processamento:</strong> {{ job.error }}
-                </div>
-                <div class="text-center mt-3">
-                    <a href="{{ url_for('index') }}" class="btn btn-caju">Tentar Novamente</a>
-                </div>
-                {% elif job.status == 'partial' %}
-                <div class="alert alert-warning border-0 rounded-4 shadow-sm p-3">
-                    <i class="fas fa-exclamation-circle me-2"></i><strong>Processamento parcial:</strong>
-                    {{ rendered_count }} de {{ clips|length }} clipe(s) foram gerados. {{ job.error or '' }}
-                </div>
-                {% elif job.status == 'completed' %}
-                <div class="alert alert-success border-0 rounded-4 shadow-sm p-3 d-flex align-items-center justify-content-between">
-                    <div>
-                        <i class="fas fa-check-circle me-2"></i><strong>Processamento Concluído!</strong> {{ rendered_count }} clipe(s) gerados com sucesso.
-                    </div>
-                    <span class="badge bg-success px-3 py-2">Pronto para Download</span>
-                </div>
-                {% endif %}
-
-                <!-- Rendered Clips Grid with Video Preview & Interactive Crop Adjustment -->
-                {% if clips %}
-                <h5 class="fw-bold mt-4 mb-3"><i class="fas fa-play-circle text-caju me-2"></i>Clipes Gerados:</h5>
-                <div class="row g-4" id="clips-gallery">
-                    {% for clip in clips %}
-                    <div class="col-md-6" data-clip-id="{{ clip.id }}">
-                        <div class="card card-cortai h-100 p-3">
-                            <!-- Embedded Video Preview Player -->
-                            {% if clip.status == 'rendered' and clip.result_file %}
-                            <div class="mb-3 rounded-4 overflow-hidden position-relative bg-black text-center" style="min-height: 280px; display: flex; align-items: center; justify-content: center;">
-                                <video controls preload="metadata" src="{{ url_for('download_clip', clip_id=clip.id) }}"
-                                       style="width: 100%; max-height: 380px; object-fit: contain; border-radius: 12px;"></video>
-                            </div>
-                            {% else %}
-                            <div class="mb-3 rounded-4 bg-dark d-flex align-items-center justify-content-center text-muted" style="height: 240px; border: 1px dashed var(--border-dark);">
-                                {% if clip.status == 'processing' %}
-                                <div class="text-center">
-                                    <div class="spinner-border text-warning mb-2" role="status"></div>
-                                    <div>Renderizando clipe...</div>
-                                </div>
-                                {% elif clip.status == 'failed' %}
-                                <div class="text-center text-danger px-3"><i class="fas fa-exclamation-triangle me-1"></i>{{ clip.error or 'Falha ao renderizar' }}</div>
-                                {% else %}
-                                <div>Aguardando processamento</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h6 class="fw-bold mb-0 text-truncate me-2" id="title-text-{{ clip.id }}" style="max-width: 75%;">
-                                    {{ clip.title or 'Clipe sugerido' }}
-                                </h6>
-                                {% if clip.clip_score is not none %}
-                                <span class="badge bg-danger rounded-pill px-2 py-1">Score {{ '%.1f'|format(clip.clip_score) }}</span>
-                                {% endif %}
-                            </div>
-
-                            {% if clip.justificativa and '[' in clip.justificativa and ']' in clip.justificativa %}
-                            <div class="mb-2">
-                                <span class="badge bg-warning text-dark px-2 py-1 me-1"><i class="fas fa-lightbulb me-1"></i>{{ clip.justificativa.split(']')[0].replace('[', '') }}</span>
-                                <span class="badge bg-secondary text-white px-2 py-1"><i class="fas fa-microchip me-1"></i>{{ clip.source or 'local' }}</span>
-                            </div>
-                            {% endif %}
-
-                            {% if clip.hook %}
-                            <p class="small text-muted mb-2"><em id="hook-text-{{ clip.id }}">"{{ clip.hook }}"</em></p>
-                            {% endif %}
-
-                            <div class="mb-3 d-flex flex-wrap gap-2">
-                                {% if clip.title %}
-                                <button type="button" class="btn btn-outline-cortai btn-sm py-1 px-2"
-                                        onclick="copyTextToClipboard('title-text-{{ clip.id }}', this)">
-                                    <i class="fas fa-copy me-1"></i>Copiar Título
-                                </button>
-                                {% endif %}
-                                {% if clip.hook %}
-                                <button type="button" class="btn btn-outline-cortai btn-sm py-1 px-2"
-                                        onclick="copyTextToClipboard('hook-text-{{ clip.id }}', this)">
-                                    <i class="fas fa-quote-right me-1"></i>Copiar Gancho
-                                </button>
-                                {% endif %}
-                            </div>
-
-                            <div class="mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                <div>
-                                    {% if clip.status == 'rendered' %}
-                                    <a href="{{ url_for('download_clip', clip_id=clip.id) }}" class="btn btn-caju btn-sm">
-                                        <i class="fas fa-download me-1"></i>Baixar Vídeo
-                                    </a>
-                                    {% endif %}
-                                </div>
-
-                                <div class="d-flex gap-1">
-                                    {% if clip.status in ('rendered', 'failed') %}
-                                    <button type="button" class="btn btn-outline-info btn-sm" onclick="openCropModal('{{ clip.id }}', {{ clip.crop_x_pct if clip.crop_x_pct is not none else 50 }})">
-                                        <i class="fas fa-crop-alt me-1"></i>Ajustar Crop
-                                    </button>
-                                    <a href="{{ url_for('edit_transcript', clip_id=clip.id) }}" class="btn btn-outline-cortai btn-sm">
-                                        <i class="fas fa-pen me-1"></i>Legenda
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% if clip.status in ('rendered', 'failed') and templates %}
-                            <form method="POST" action="{{ url_for('rerender_clip', clip_id=clip.id) }}" class="mt-3 d-flex gap-2">
-                                <select class="form-select form-select-sm bg-dark text-light border-secondary" name="template_id" aria-label="Template para re-renderizar">
-                                    <option value="">Configuração original</option>
-                                    {% for tpl in templates %}
-                                    <option value="{{ tpl.id }}" {{ 'selected' if clip.template_id == tpl.id else '' }}>{{ tpl.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <button type="submit" class="btn btn-outline-warning btn-sm text-nowrap"><i class="fas fa-sync-alt me-1"></i>Re-renderizar</button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
+{% set stages = [
+    ('Download', 10, 30),
+    ('Transcrição', 30, 40),
+    ('Rosto ativo', 40, 50),
+    ('Legenda e moldura', 50, 75),
+    ('Exportação', 75, 100),
+] %}
+{% set ready_count = clips|selectattr('status', 'equalto', 'rendered')|list|length %}
+<div class="d-flex flex-column gap-4 pt-3">
+    <!-- Cabeçalho com controles (Pausar / Retomar / Cancelar) -->
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div style="min-width: 0;">
+            <nav aria-label="Trilha" class="ct-hint mb-2" style="font-size: 0.875rem;">
+                <a href="{{ url_for('projects') }}" style="color: var(--text-muted);">Projetos</a> / {{ job.id[:8] }}
+            </nav>
+            <h1 class="fw-bold mb-1" style="font-size: 2rem; letter-spacing: -0.03em;">Processamento de vídeo</h1>
+            <p class="mb-0 text-truncate ct-hint" style="font-size: 0.95rem; max-width: 640px;" title="{{ job.url }}">{{ job.url }}</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            {% if job.status in ('queued', 'processing') %}
+            <form method="POST" action="{{ url_for('pause_job', job_id=job.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-outline-cortai ct-btn"><i class="fas fa-pause" aria-hidden="true"></i>Pausar</button>
+            </form>
+            <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline" onsubmit="return confirm('Deseja realmente cancelar este processamento?');">
+                <button type="submit" class="btn ct-btn" style="color: #FCA5A5; border: 1px solid var(--border-dark); border-radius: var(--radius-md);">Cancelar</button>
+            </form>
+            {% elif job.status == 'paused' %}
+            <form method="POST" action="{{ url_for('resume_job', job_id=job.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-caju ct-btn"><i class="fas fa-play" aria-hidden="true"></i>Retomar</button>
+            </form>
+            <form method="POST" action="{{ url_for('cancel_job', job_id=job.id) }}" class="d-inline" onsubmit="return confirm('Deseja realmente cancelar este processamento?');">
+                <button type="submit" class="btn ct-btn" style="color: #FCA5A5; border: 1px solid var(--border-dark); border-radius: var(--radius-md);">Cancelar</button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('index') }}" class="btn btn-caju ct-btn">Novo corte</a>
+            {% endif %}
         </div>
     </div>
+
+    {% if job.status in ('queued', 'processing', 'paused') %}
+    <!-- Progresso: anel + etapas -->
+    <section class="ct-section d-flex flex-wrap align-items-center gap-4" style="padding: 28px;" aria-labelledby="stage-status-title">
+        <div class="position-relative flex-shrink-0" role="progressbar" aria-label="Progresso total" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ job.progress }}" id="progress-bar" style="width: 128px; height: 128px;">
+            <svg width="128" height="128" viewBox="0 0 128 128" aria-hidden="true" style="transform: rotate(-90deg);">
+                <circle cx="64" cy="64" r="56" fill="none" stroke="var(--border-dark)" stroke-width="10"/>
+                <circle id="progress-ring" cx="64" cy="64" r="56" fill="none" stroke="#FF6A2B" stroke-width="10"
+                        stroke-dasharray="351.9" stroke-dashoffset="{{ 351.9 - (351.9 * job.progress / 100) }}"
+                        stroke-linecap="round" style="transition: stroke-dashoffset 0.3s linear;"/>
+            </svg>
+            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                <span class="fw-bold" style="font-family: var(--font-display); font-size: 1.85rem; letter-spacing: -0.02em;" id="progress-text">{{ job.progress }}%</span>
+                <span class="ct-hint" style="font-size: 0.75rem;" id="progress-eta">{{ 'pausado' if job.status == 'paused' else 'em andamento' }}</span>
+            </div>
+        </div>
+        <div class="d-flex flex-column gap-3" style="flex: 999 1 420px; min-width: 0;">
+            <div>
+                <h2 class="ct-h2 mb-1" style="font-size: 1.375rem;" id="stage-status-title">
+                    {% if job.status == 'paused' %}Processamento pausado{% else %}Baixando o vídeo…{% endif %}
+                </h2>
+                <p class="mb-0 ct-hint" style="font-size: 0.95rem;" id="stage-sub-description" aria-live="polite">
+                    {% if job.status == 'paused' %}Clique em Retomar para continuar de onde parou.{% else %}Esta página se atualiza sozinha.{% endif %}
+                </p>
+            </div>
+            <ol class="ct-stages">
+                {% for label, start, done in stages %}
+                <li id="stage-{{ loop.index }}" class="ct-stage {{ 'completed' if job.progress >= done else ('active' if job.progress >= start else '') }}"
+                    data-start="{{ start }}" data-done="{{ done }}">
+                    <span class="ct-stage-bar"></span>
+                    <span class="ct-stage-label"><i class="fas fa-check" aria-hidden="true"></i><span class="ct-dot" aria-hidden="true"></span>{{ label }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
+    </section>
+    {% elif job.status == 'cancelled' %}
+    <div class="alert alert-warning border-0 rounded-4 shadow-sm p-3 mb-0">
+        <i class="fas fa-exclamation-circle me-2"></i><strong>Processamento cancelado:</strong> este projeto foi interrompido a pedido do usuário.
+    </div>
+    {% elif job.status == 'interrupted' %}
+    <div class="alert alert-warning border-0 rounded-4 shadow-sm p-3 mb-0">
+        <i class="fas fa-plug me-2"></i><strong>Processamento interrompido:</strong> {{ job.error or 'O aplicativo foi reiniciado durante este projeto.' }}
+    </div>
+    {% elif job.status == 'failed' %}
+    <div class="alert alert-danger border-0 rounded-4 shadow-sm p-3 mb-0">
+        <i class="fas fa-exclamation-triangle me-2"></i><strong>Erro no processamento:</strong> {{ job.error }}
+    </div>
+    {% elif job.status == 'partial' %}
+    <div class="alert alert-warning border-0 rounded-4 shadow-sm p-3 mb-0">
+        <i class="fas fa-exclamation-circle me-2"></i><strong>Processamento parcial:</strong>
+        {{ rendered_count }} de {{ clips|length }} clipe(s) foram gerados. {{ job.error or '' }}
+    </div>
+    {% elif job.status == 'completed' %}
+    <div class="ct-note align-items-center" style="font-size: 0.95rem;">
+        <i class="fas fa-check-circle" style="color: var(--mar-text);" aria-hidden="true"></i>
+        <span><strong>Pronto.</strong> {{ rendered_count }} clipe(s) gerados.</span>
+    </div>
+    {% endif %}
+
+    <!-- Clipes -->
+    {% if clips %}
+    <section aria-labelledby="s-clips">
+        <div class="d-flex align-items-baseline gap-3 mb-3">
+            <h2 class="ct-h2" style="font-size: 1.375rem;" id="s-clips">Clipes</h2>
+            <span class="ct-hint" style="font-size: 0.95rem;">{{ ready_count }} de {{ clips|length }} prontos</span>
+        </div>
+        <div class="row g-4" id="clips-gallery">
+            {% for clip in clips %}
+            <div class="col-md-6 col-xl-4" data-clip-id="{{ clip.id }}">
+                <article class="ct-clip" {{ 'aria-busy=true' if clip.status == 'processing' }}>
+                    <div class="ct-clip-media">
+                        {% if clip.status == 'rendered' and clip.result_file %}
+                        <video controls preload="metadata" src="{{ url_for('download_clip', clip_id=clip.id) }}"></video>
+                        {% elif clip.status == 'processing' %}
+                        <div class="ct-clip-ph ct-shimmer"><span class="fw-semibold">Renderizando…</span></div>
+                        {% elif clip.status == 'failed' %}
+                        <div class="ct-clip-ph" style="border: 1px dashed var(--border-dark); color: #FCA5A5;">
+                            <i class="fas fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
+                            <span>{{ clip.error or 'Falha ao renderizar' }}</span>
+                        </div>
+                        {% else %}
+                        <div class="ct-clip-ph" style="border: 1px dashed var(--border-dark); color: var(--text-muted);">
+                            <i class="far fa-clock fa-lg" aria-hidden="true"></i>
+                            <span class="fw-semibold">Na fila</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="ct-clip-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            {% if clip.clip_score is not none %}
+                            <span class="ct-chip ct-chip-caju">Nota {{ ('%.1f'|format(clip.clip_score)).replace('.', ',') }}</span>
+                            {% endif %}
+                            {% if clip.justificativa and '[' in clip.justificativa and ']' in clip.justificativa %}
+                            <span class="ct-chip ct-chip-sol">{{ clip.justificativa.split(']')[0].replace('[', '') }}</span>
+                            {% endif %}
+                            <span class="ct-chip ct-chip-muted">{{ 'Regras locais' if (clip.source or 'local') == 'local' else clip.source }}</span>
+                        </div>
+
+                        <h3 class="mb-0 fw-bold" style="font-size: 1.05rem; line-height: 1.35;" id="title-text-{{ clip.id }}">{{ clip.title or 'Clipe sugerido' }}</h3>
+
+                        {% if clip.hook %}
+                        <p class="mb-0 ct-hint fst-italic" style="font-size: 0.875rem; line-height: 1.5;"><span id="hook-text-{{ clip.id }}">"{{ clip.hook }}"</span></p>
+                        {% endif %}
+
+                        <div class="d-flex flex-wrap gap-2 mt-auto pt-1">
+                            {% if clip.status == 'rendered' %}
+                            <a href="{{ url_for('download_clip', clip_id=clip.id) }}" class="btn btn-caju ct-btn"><i class="fas fa-download" aria-hidden="true"></i>Baixar</a>
+                            {% endif %}
+                            {% if clip.status in ('rendered', 'failed') %}
+                            <button type="button" class="btn btn-outline-cortai ct-btn" onclick="openCropModal('{{ clip.id }}', {{ clip.crop_x_pct if clip.crop_x_pct is not none else 50 }})">Reenquadrar</button>
+                            <a href="{{ url_for('edit_transcript', clip_id=clip.id) }}" class="btn btn-outline-cortai ct-btn">Legenda</a>
+                            {% endif %}
+                            {% if clip.title %}
+                            <button type="button" class="btn btn-outline-cortai ct-btn" aria-label="Copiar título" title="Copiar título"
+                                    onclick="copyTextToClipboard('title-text-{{ clip.id }}', this)"><i class="fas fa-copy" aria-hidden="true"></i></button>
+                            {% endif %}
+                            {% if clip.hook %}
+                            <button type="button" class="btn btn-outline-cortai ct-btn" aria-label="Copiar gancho" title="Copiar gancho"
+                                    onclick="copyTextToClipboard('hook-text-{{ clip.id }}', this)"><i class="fas fa-quote-right" aria-hidden="true"></i></button>
+                            {% endif %}
+                        </div>
+
+                        {% if clip.status in ('rendered', 'failed') and templates %}
+                        <form method="POST" action="{{ url_for('rerender_clip', clip_id=clip.id) }}" class="d-flex gap-2 pt-3" style="border-top: 1px solid var(--border-dark);">
+                            <select class="ct-field" style="min-height: 44px; padding: 6px 10px; font-size: 0.875rem;" name="template_id" aria-label="Template para re-renderizar">
+                                <option value="">Configuração original</option>
+                                {% for tpl in templates %}
+                                <option value="{{ tpl.id }}" {{ 'selected' if clip.template_id == tpl.id else '' }}>{{ tpl.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-outline-cortai ct-btn text-nowrap"><i class="fas fa-sync-alt" aria-hidden="true"></i>Re-renderizar</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </article>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
 </div>
 
 <!-- Interactive Crop Adjustment Modal -->
@@ -294,7 +247,7 @@ Status do Processamento — Cortaí
 
         navigator.clipboard.writeText(text).then(function() {
             const originalHtml = btnElement.innerHTML;
-            btnElement.innerHTML = '<i class="fas fa-check me-1"></i>Copiado!';
+            btnElement.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i>';
             setTimeout(function() { btnElement.innerHTML = originalHtml; }, 2000);
         });
     }
@@ -324,27 +277,34 @@ Status do Processamento — Cortaí
     function updateUIProgress(pct) {
         const progressText = document.getElementById('progress-text');
         const progressRing = document.getElementById('progress-ring');
+        const progressBar = document.getElementById('progress-bar');
         const titleEl = document.getElementById('stage-status-title');
 
         const rounded = Math.round(pct);
         if (progressText) progressText.textContent = rounded + '%';
+        if (progressBar) progressBar.setAttribute('aria-valuenow', rounded);
         if (progressRing) {
-            const circumference = 326.7;
-            const offset = circumference - (circumference * pct / 100);
-            progressRing.style.strokeDashoffset = offset;
+            const circumference = 351.9;
+            progressRing.style.strokeDashoffset = circumference - (circumference * pct / 100);
         }
+
+        document.querySelectorAll('.ct-stage').forEach(function(stage) {
+            const done = pct >= Number(stage.dataset.done);
+            stage.classList.toggle('completed', done);
+            stage.classList.toggle('active', !done && pct >= Number(stage.dataset.start));
+        });
 
         if (titleEl && !isPaused) {
             if (pct < 30) {
-                titleEl.textContent = 'Baixando fluxo de mídia do vídeo...';
+                titleEl.textContent = 'Baixando o vídeo…';
             } else if (pct < 40) {
-                titleEl.textContent = 'Transcrevendo fala com marcas de tempo por palavra...';
+                titleEl.textContent = 'Transcrevendo a fala palavra por palavra…';
             } else if (pct < 50) {
-                titleEl.textContent = 'Analisando rostos, movimento labial e falante ativo...';
+                titleEl.textContent = 'Enquadrando quem está falando…';
             } else if (pct < 75) {
-                titleEl.textContent = 'Gerando legendas estilizadas e enquadramento de moldura...';
+                titleEl.textContent = 'Aplicando legenda e moldura…';
             } else {
-                titleEl.textContent = 'Renderizando e exportando os clipes verticais finais...';
+                titleEl.textContent = 'Exportando os clipes…';
             }
         }
     }

@@ -1,193 +1,230 @@
 {% extends "base.html" %}
 
 {% block title %}
-Novo Processamento — Cortaí
+Novo corte — Cortaí
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-10 col-md-12">
-        <div class="card card-cyber p-4 mb-4">
-            <div class="card-body">
-                <h3 class="fw-bold mb-2">Novo Processamento de Vídeo</h3>
-                <p class="text-muted mb-4">Selecione uma URL do YouTube ou faça upload de arquivos locais para gerar cortes com legenda estilizada, lip-sync e molduras.</p>
+{# Desenho de cada enquadramento: [x, y, largura, altura, raio, cor] da forma principal e da secundária (opcional), numa moldura 30x46 #}
+{% set layouts = [
+    ('auto', 'Segue o rosto', 'Centraliza quem fala', [8, 9, 14, 14, 7, '#FF6A2B'], [4, 27, 22, 19, 8, '#4A4A54']),
+    ('active_speaker', 'Ativo por fala', 'Troca de rosto pela voz', [2, 8, 12, 12, 6, '#FF6A2B'], [16, 26, 12, 12, 6, '#4A4A54']),
+    ('card_frame', 'Card social', 'Vídeo inteiro num card', [3, 16, 24, 15, 3, '#FF6A2B'], [3, 9, 16, 3, 2, '#4A4A54']),
+    ('header_footer_frame', 'Editorial', 'Título no topo, marca embaixo', [0, 15, 30, 16, 0, '#FF6A2B'], [0, 0, 30, 9, 0, '#4A4A54']),
+    ('blurred_background', 'Fundo desfocado', 'Vídeo inteiro, fundo borrado', [0, 0, 30, 46, 0, '#2E2E35'], [0, 15, 30, 16, 0, '#FF6A2B']),
+    ('center', 'Crop central', 'Recorte fixo no meio', [6, 0, 18, 46, 0, '#FF6A2B'], None),
+] %}
 
-                <form method="POST" action="{{ url_for('submit') }}" enctype="multipart/form-data">
-                    <!-- Source Mode Selector (YouTube vs Local File) -->
-                    <div class="mb-4">
-                        <label class="form-label font-weight-bold fw-bold">Origem do Vídeo</label>
-                        <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="input_source" id="source_youtube" value="youtube" checked autocomplete="off" onchange="toggleSourceInput()">
-                            <label class="btn btn-outline-cyber py-2" for="source_youtube">
-                                <i class="fab fa-youtube text-danger me-2"></i>YouTube (URL ou Lote de URLs)
-                            </label>
-                            <input type="radio" class="btn-check" name="input_source" id="source_file" value="file" autocomplete="off" onchange="toggleSourceInput()">
-                            <label class="btn btn-outline-cyber py-2" for="source_file">
-                                <i class="fas fa-file-video text-cyan me-2"></i>Arquivo Local (.mp4, .mkv, .mov)
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- YouTube Multi-URL Container -->
-                    <div class="mb-4" id="youtube_container">
-                        <label for="urls" class="form-label font-weight-bold fw-bold">URLs do YouTube (Uma por linha para Lote)</label>
-                        <textarea class="form-control bg-dark text-light border-secondary p-3" id="urls" name="urls" rows="3"
-                                  placeholder="https://www.youtube.com/watch?v=...&#10;https://www.youtube.com/watch?v=..."></textarea>
-                        <div class="form-text text-muted">Você pode colar até 10 URLs de uma vez e acompanhar cada vídeo como um projeto separado.</div>
-                    </div>
-
-                    <!-- Local File Multi-Upload Container -->
-                    <div class="mb-4" id="file_container" style="display: none;">
-                        <label for="video_files" class="form-label font-weight-bold fw-bold">Selecione um ou mais arquivos de vídeo</label>
-                        <input class="form-control bg-dark text-light border-secondary p-3" type="file" id="video_files" name="video_files" accept=".mp4,.mkv,.mov,.avi,.webm" multiple>
-                        <div class="form-text text-muted">Formatos suportados: MP4, MKV, MOV, AVI, WEBM. Todos serão processados localmente.</div>
-                    </div>
-
-                    {% if templates %}
-                    <div class="mb-4">
-                        <label for="template_id" class="form-label font-weight-bold fw-bold"><i class="fas fa-bookmark text-caju me-2"></i>Template de Canal Salvo (Opcional)</label>
-                        <select class="form-select bg-dark text-light border-secondary p-2" id="template_id" name="template_id">
-                            <option value="" selected>Nenhum (Usar configurações avulsas abaixo)</option>
-                            {% for tpl in templates %}
-                            <option value="{{ tpl.id }}">{{ tpl.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    {% endif %}
-
-                    <!-- Aspect Ratio & Duration Settings -->
-                    <div class="row mb-4">
-                        <div class="col-md-6 mb-3 mb-md-0">
-                            <label class="form-label font-weight-bold fw-bold">Proporção / Formato do Vídeo</label>
-                            <div class="btn-group w-100" role="group">
-                                <input type="radio" class="btn-check" name="aspect_ratio" id="ratio_9_16" value="9:16" checked autocomplete="off" onchange="toggleAspectRatioLimits()">
-                                <label class="btn btn-outline-cyber py-2" for="ratio_9_16">
-                                    <i class="fas fa-mobile-alt me-2 text-cyan"></i>Vertical 9:16 (Shorts / TikTok)
-                                </label>
-                                <input type="radio" class="btn-check" name="aspect_ratio" id="ratio_16_9" value="16:9" autocomplete="off" onchange="toggleAspectRatioLimits()">
-                                <label class="btn btn-outline-cyber py-2" for="ratio_16_9">
-                                    <i class="fas fa-desktop me-2 text-magenta"></i>Horizontal 16:9 (YouTube)
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label font-weight-bold fw-bold">Layout de Enquadramento & Moldura</label>
-                            <select class="form-select bg-dark text-light border-secondary p-2" id="layout" name="layout">
-                                <option value="auto" selected>👤 Segue o Rosto (Auto Face-Aware)</option>
-                                <option value="active_speaker">🗣️ Ativo por Fala (Lip-Sync Troca de Rosto)</option>
-                                <option value="card_frame">📇 Moldura Social Card (Vídeo Inteiro + Fundo Social)</option>
-                                <option value="header_footer_frame">🖼️ Moldura Editorial (Vídeo Inteiro + Topo Título)</option>
-                                <option value="blurred_background">🌫️ Fundo Desfocado (Blurred Background)</option>
-                                <option value="center">🎯 Crop Central Fixo</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-4 mb-3 mb-md-0">
-                            <label for="language" class="form-label fw-bold">Idioma da fala</label>
-                            <select class="form-select bg-dark text-light border-secondary" id="language" name="language">
-                                <option value="" selected>Detectar automaticamente</option>
-                                <option value="pt">Português</option>
-                                <option value="en">Inglês</option>
-                                <option value="es">Espanhol</option>
-                            </select>
-                        </div>
-                        <div class="col-md-8">
-                            <label for="vocabulary" class="form-label fw-bold">Vocabulário personalizado</label>
-                            <input type="text" class="form-control bg-dark text-light border-secondary" id="vocabulary" name="vocabulary"
-                                   placeholder="ANAC, VOEPASS, nomes e siglas do vídeo">
-                            <div class="form-text text-muted">Separe termos por vírgula para corrigir nomes próprios e siglas na legenda.</div>
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-4 mb-3">
-                            <label for="min_duration" class="form-label">Duração mínima (s)</label>
-                            <input type="number" class="form-control bg-dark text-light border-secondary" id="min_duration" name="min_duration" min="1" value="15" step="1">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="max_duration" class="form-label">Duração máxima (s)</label>
-                            <input type="number" class="form-control bg-dark text-light border-secondary" id="max_duration" name="max_duration" min="1" max="60" value="60" step="1">
-                            <div class="form-text" id="max_duration_help">Até 60s (1 min) no formato vertical 9:16</div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="num_clips" class="form-label">Quantidade de clipes</label>
-                            <input type="number" class="form-control bg-dark text-light border-secondary" id="num_clips" name="num_clips" min="1" max="10" value="3" step="1">
-                        </div>
-                    </div>
-
-                    <!-- Customização Avançada de Legendas (Estilo, Fonte & Casing) -->
-                    <div class="mb-4">
-                        <label class="form-label font-weight-bold fw-bold">Estilo Visual da Legenda</label>
-                        <div class="row g-2 mb-3">
-                            {% for preset_key, preset_info in caption_presets.items() %}
-                            <div class="col-md-4 col-sm-6">
-                                <div class="card h-100 preset-card p-2 text-center border border-secondary border-opacity-50 cursor-pointer"
-                                     onclick="selectCaptionPreset('{{ preset_key }}')" id="preset-card-{{ preset_key }}" style="cursor: pointer; background: var(--surface-dark);">
-                                    <div class="form-check d-flex align-items-center justify-content-center mb-1">
-                                        <input class="form-check-input me-2" type="radio" name="caption_preset"
-                                               id="preset-radio-{{ preset_key }}" value="{{ preset_key }}"
-                                               {{ 'checked' if loop.first else '' }}>
-                                        <label class="form-check-label fw-bold small" for="preset-radio-{{ preset_key }}">
-                                            {{ preset_info.label }}
-                                        </label>
-                                    </div>
-                                    <div class="caption-preview-box p-2 rounded my-1" style="background-color: #000; min-height: 48px; display: flex; align-items: center; justify-content: center;">
-                                        <span style="{{ preset_info.css }}">{{ preset_info.sample|safe }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="caption_font" class="form-label font-weight-bold fw-bold">Fonte da Legenda</label>
-                                <select class="form-select bg-dark text-light border-secondary" id="caption_font" name="caption_font">
-                                    {% for font in caption_fonts %}
-                                    <option value="{{ font }}" {{ 'selected' if font == 'Montserrat' else '' }}>{{ font }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label font-weight-bold fw-bold">Capitalização do Texto</label>
-                                <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="casing_mode" id="casing_uppercase" value="uppercase" checked autocomplete="off">
-                                    <label class="btn btn-outline-cyber" for="casing_uppercase">
-                                        <i class="fas fa-font me-1"></i>UPPERCASE
-                                    </label>
-                                    <input type="radio" class="btn-check" name="casing_mode" id="casing_titlecase" value="titlecase" autocomplete="off">
-                                    <label class="btn btn-outline-cyber" for="casing_titlecase">
-                                        <i class="fas fa-text-height me-1"></i>TitleCase Gramatical
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-magenta btn-lg py-3 fw-bold shadow-lg">
-                            <i class="fas fa-bolt me-2"></i>Iniciar Processamento de Vídeos
-                        </button>
-                    </div>
-                </form>
-            </div>
+<form method="POST" action="{{ url_for('submit') }}" enctype="multipart/form-data" id="newCutForm">
+<div class="row g-4 pt-3">
+    <div class="col-lg-8 d-flex flex-column gap-3">
+        <div class="mb-2">
+            <h1 class="fw-bold mb-2" style="font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.05; letter-spacing: -0.03em;">Do vídeo longo ao corte pronto.</h1>
+            <p class="mb-0" style="color: var(--text-muted); font-size: 1.05rem; max-width: 560px;">Cole links ou solte arquivos. O Cortaí acha os melhores momentos, enquadra quem está falando e legenda.</p>
         </div>
+
+        <!-- 1. Vídeos -->
+        <section class="ct-section" aria-labelledby="s-videos">
+            <div class="ct-section-head">
+                <span class="ct-step">1</span>
+                <h2 class="ct-h2" id="s-videos">Vídeos</h2>
+                <span class="ct-hint ms-auto">até 10 por lote</span>
+            </div>
+            <div class="ct-seg mb-3" role="radiogroup" aria-label="Origem do vídeo">
+                <input type="radio" class="ct-opt-input" name="input_source" id="source_youtube" value="youtube" checked autocomplete="off" onchange="toggleSourceInput()">
+                <label for="source_youtube"><i class="fab fa-youtube" aria-hidden="true"></i>Links do YouTube</label>
+                <input type="radio" class="ct-opt-input" name="input_source" id="source_file" value="file" autocomplete="off" onchange="toggleSourceInput()">
+                <label for="source_file"><i class="fas fa-file-video" aria-hidden="true"></i>Arquivos do computador</label>
+            </div>
+            <div id="youtube_container">
+                <label for="urls" class="ct-label">Links do YouTube, um por linha</label>
+                <textarea class="ct-field" id="urls" name="urls" rows="3" style="resize: vertical; line-height: 1.6;"
+                          placeholder="https://www.youtube.com/watch?v=…&#10;https://youtu.be/…"></textarea>
+                <div class="ct-hint mt-2">Cada link vira um projeto separado.</div>
+            </div>
+            <div id="file_container" style="display: none;">
+                <div class="ct-drop">
+                    <span class="ct-icon-box"><i class="fas fa-arrow-up-from-bracket" aria-hidden="true"></i></span>
+                    <span class="d-flex flex-column">
+                        <label for="video_files" class="fw-bold mb-0" id="file_label">Solte vídeos aqui ou clique para escolher</label>
+                        <span class="ct-hint" style="font-size: 0.875rem;">.mp4, .mkv, .mov, .avi ou .webm · processado no seu computador</span>
+                    </span>
+                    <input type="file" id="video_files" name="video_files" accept=".mp4,.mkv,.mov,.avi,.webm" multiple onchange="updateFileLabel(this)">
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Formato -->
+        <section class="ct-section" aria-labelledby="s-formato">
+            <div class="ct-section-head">
+                <span class="ct-step">2</span>
+                <h2 class="ct-h2" id="s-formato">Formato</h2>
+            </div>
+            <div class="ct-grid" role="radiogroup" aria-labelledby="s-formato" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+                <div>
+                    <input type="radio" class="ct-opt-input" name="aspect_ratio" id="ratio_9_16" value="9:16" data-label="Vertical 9:16" checked autocomplete="off" onchange="toggleAspectRatioLimits()">
+                    <label class="ct-opt" for="ratio_9_16">
+                        <span class="ct-ratio" aria-hidden="true"><span style="width: 26px; height: 46px;"></span></span>
+                        <span><span class="ct-opt-title">Vertical 9:16</span><span class="ct-opt-sub">Até 60 s · Shorts, TikTok, Reels</span></span>
+                    </label>
+                </div>
+                <div>
+                    <input type="radio" class="ct-opt-input" name="aspect_ratio" id="ratio_16_9" value="16:9" data-label="Horizontal 16:9" autocomplete="off" onchange="toggleAspectRatioLimits()">
+                    <label class="ct-opt" for="ratio_16_9">
+                        <span class="ct-ratio" aria-hidden="true"><span style="width: 52px; height: 30px;"></span></span>
+                        <span><span class="ct-opt-title">Horizontal 16:9</span><span class="ct-opt-sub">Até 5 min · YouTube, podcasts</span></span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Enquadramento -->
+        <section class="ct-section" aria-labelledby="s-enq">
+            <div class="ct-section-head">
+                <span class="ct-step">3</span>
+                <h2 class="ct-h2" id="s-enq">Enquadramento</h2>
+            </div>
+            <div class="ct-grid" role="radiogroup" aria-labelledby="s-enq">
+                {% for key, title, sub, a, b in layouts %}
+                <div>
+                    <input type="radio" class="ct-opt-input" name="layout" id="layout_{{ key }}" value="{{ key }}" data-label="{{ title }}" {{ 'checked' if loop.first }} autocomplete="off">
+                    <label class="ct-opt" for="layout_{{ key }}">
+                        <span class="ct-glyph" aria-hidden="true">
+                            <span style="left: {{ a[0] }}px; top: {{ a[1] }}px; width: {{ a[2] }}px; height: {{ a[3] }}px; border-radius: {{ a[4] }}px; background: {{ a[5] }};"></span>
+                            {% if b %}<span style="left: {{ b[0] }}px; top: {{ b[1] }}px; width: {{ b[2] }}px; height: {{ b[3] }}px; border-radius: {{ b[4] }}px; background: {{ b[5] }};"></span>{% endif %}
+                        </span>
+                        <span><span class="ct-opt-title">{{ title }}</span><span class="ct-opt-sub">{{ sub }}</span></span>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- 4. Legenda -->
+        <section class="ct-section" aria-labelledby="s-leg">
+            <div class="ct-section-head">
+                <span class="ct-step">4</span>
+                <h2 class="ct-h2" id="s-leg">Legenda</h2>
+            </div>
+            <span class="ct-label" id="caption-style-label">Estilo da legenda</span>
+            <div class="ct-grid ct-grid-caps mb-3" role="radiogroup" aria-labelledby="caption-style-label">
+                {% for preset_key, preset_info in caption_presets.items() %}
+                <div>
+                    <input type="radio" class="ct-opt-input" name="caption_preset" id="preset-radio-{{ preset_key }}" value="{{ preset_key }}" data-label="{{ preset_info.label }}" {{ 'checked' if loop.first }} autocomplete="off">
+                    <label class="ct-opt ct-opt-col" for="preset-radio-{{ preset_key }}" title="{{ preset_info.description }}">
+                        <span class="ct-cap" aria-hidden="true"><span class="ct-cap-text" style="{{ preset_info.css }}">{{ preset_info.sample|safe }}</span></span>
+                        <span class="ct-opt-title px-1" style="font-size: 0.875rem; font-weight: 600;">{{ preset_info.label }}</span>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="caption_font" class="ct-label">Fonte</label>
+                    <select class="ct-field" id="caption_font" name="caption_font" onchange="updateCaptionFont()">
+                        {% for font in caption_fonts %}
+                        <option value="{{ font }}" {{ 'selected' if font == 'Montserrat' }}>{{ font }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <span class="ct-label" id="casing-label">Capitalização</span>
+                    <div class="ct-seg" role="radiogroup" aria-labelledby="casing-label">
+                        <input type="radio" class="ct-opt-input" name="casing_mode" id="casing_uppercase" value="uppercase" checked autocomplete="off">
+                        <label for="casing_uppercase">CAIXA-ALTA</label>
+                        <input type="radio" class="ct-opt-input" name="casing_mode" id="casing_titlecase" value="titlecase" autocomplete="off">
+                        <label for="casing_titlecase">Título Gramatical</label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ajustes avançados -->
+        <details class="ct-section ct-adv">
+            <summary>
+                <span class="d-flex flex-column">
+                    <span class="ct-h2" style="font-size: 1.125rem;">Ajustes avançados</span>
+                    <span class="ct-hint" style="font-size: 0.875rem;">Quantidade, duração, idioma e vocabulário</span>
+                </span>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+            <div class="ct-adv-body row g-3 pt-4">
+                <div class="col-md-4">
+                    <label for="num_clips" class="ct-label">Quantidade de clipes</label>
+                    <input type="number" class="ct-field" id="num_clips" name="num_clips" min="1" max="10" value="3" step="1">
+                </div>
+                <div class="col-md-4">
+                    <label for="min_duration" class="ct-label">Duração mínima (s)</label>
+                    <input type="number" class="ct-field" id="min_duration" name="min_duration" min="1" value="15" step="1">
+                </div>
+                <div class="col-md-4">
+                    <label for="max_duration" class="ct-label">Duração máxima (s)</label>
+                    <input type="number" class="ct-field" id="max_duration" name="max_duration" min="1" max="60" value="60" step="1" aria-describedby="max_duration_help">
+                    <div class="ct-hint mt-1" id="max_duration_help">Até 60 s no formato vertical 9:16</div>
+                </div>
+                <div class="col-md-4">
+                    <label for="language" class="ct-label">Idioma da fala</label>
+                    <select class="ct-field" id="language" name="language">
+                        <option value="" selected>Detectar automaticamente</option>
+                        <option value="pt">Português</option>
+                        <option value="en">Inglês</option>
+                        <option value="es">Espanhol</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <label for="vocabulary" class="ct-label">Vocabulário (nomes e siglas que a legenda deve acertar)</label>
+                    <input type="text" class="ct-field" id="vocabulary" name="vocabulary" placeholder="Separe por vírgula: ANAC, VOEPASS…">
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        {% for term in ['ANAC', 'VOEPASS', 'Cortaí', 'IA', 'YouTube', 'ChatGPT'] %}
+                        <button type="button" class="ct-chip-btn" onclick="addVocabTerm('{{ term }}')">+ {{ term }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </details>
     </div>
+
+    <!-- Resumo -->
+    <aside class="col-lg-4" aria-label="Resumo">
+        <div class="ct-sticky d-flex flex-column gap-3">
+            <div class="ct-section ct-summary d-flex flex-column gap-3">
+                <h2 class="ct-h2" style="font-size: 1.125rem;">Resumo</h2>
+                {% if templates %}
+                <div>
+                    <label for="template_id" class="ct-label">Template do canal</label>
+                    <select class="ct-field" id="template_id" name="template_id">
+                        <option value="" selected>Nenhum</option>
+                        {% for tpl in templates %}
+                        <option value="{{ tpl.id }}">{{ tpl.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <dl>
+                    <div><dt>Formato</dt><dd id="sum-format">Vertical 9:16</dd></div>
+                    <div><dt>Enquadramento</dt><dd id="sum-layout">Segue o rosto</dd></div>
+                    <div><dt>Legenda</dt><dd id="sum-caption">—</dd></div>
+                    <div><dt>Clipes</dt><dd id="sum-clips">3 de 15 a 60 s</dd></div>
+                    <div><dt>Seleção</dt><dd>{{ 'Com IA' if ai_enabled else 'Regras locais' }}</dd></div>
+                </dl>
+                <button type="submit" class="btn btn-caju btn-lg d-flex align-items-center justify-content-center gap-2" style="min-height: 54px;">
+                    Gerar cortes <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </button>
+            </div>
+            {% if not ai_enabled %}
+            <div class="ct-note">
+                <i class="fas fa-circle-info mt-1" style="color: var(--mar-text);" aria-hidden="true"></i>
+                <p class="mb-0">Sem chave de IA, os cortes saem por regras locais. <a href="{{ url_for('settings_route') }}" class="text-caju">Adicionar chave em Configurações</a></p>
+            </div>
+            {% endif %}
+        </div>
+    </aside>
 </div>
+</form>
 {% endblock %}
 
 {% block scripts %}
 <script>
-function selectCaptionPreset(presetKey) {
-    const radio = document.getElementById('preset-radio-' + presetKey);
-    if (radio) radio.checked = true;
-    document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('border-info', 'bg-dark'));
-    const card = document.getElementById('preset-card-' + presetKey);
-    if (card) card.classList.add('border-info');
-}
-
 function toggleAspectRatioLimits() {
     const isVertical = document.getElementById('ratio_9_16').checked;
     const maxDurationInput = document.getElementById('max_duration');
@@ -196,12 +233,13 @@ function toggleAspectRatioLimits() {
     if (isVertical) {
         maxDurationInput.max = 60;
         if (parseInt(maxDurationInput.value) > 60) maxDurationInput.value = 60;
-        if (helpText) helpText.textContent = 'Até 60s (1 min) no formato vertical 9:16';
+        if (helpText) helpText.textContent = 'Até 60 s no formato vertical 9:16';
     } else {
         maxDurationInput.max = 300;
         if (parseInt(maxDurationInput.value) === 60) maxDurationInput.value = 180;
-        if (helpText) helpText.textContent = 'Até 300s (5 min) no formato horizontal 16:9';
+        if (helpText) helpText.textContent = 'Até 300 s (5 min) no formato horizontal 16:9';
     }
+    updateSummary();
 }
 
 function toggleSourceInput() {
@@ -217,6 +255,7 @@ function toggleSourceInput() {
         urlsInput.required = true;
         filesInput.required = false;
         filesInput.value = '';
+        updateFileLabel(filesInput);
     } else {
         youtubeContainer.style.display = 'none';
         fileContainer.style.display = 'block';
@@ -225,9 +264,47 @@ function toggleSourceInput() {
         urlsInput.value = '';
     }
 }
+
+function updateFileLabel(input) {
+    const n = input.files ? input.files.length : 0;
+    document.getElementById('file_label').textContent = n === 0
+        ? 'Solte vídeos aqui ou clique para escolher'
+        : (n === 1 ? input.files[0].name : n + ' vídeos selecionados');
+}
+
+function updateCaptionFont() {
+    document.getElementById('newCutForm').style.setProperty('--cap-font', "'" + document.getElementById('caption_font').value + "'");
+    updateSummary();
+}
+
+function addVocabTerm(term) {
+    const input = document.getElementById('vocabulary');
+    const terms = input.value.split(',').map(t => t.trim()).filter(Boolean);
+    if (!terms.includes(term)) terms.push(term);
+    input.value = terms.join(', ');
+}
+
+function checkedLabel(name) {
+    const el = document.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.dataset.label : '—';
+}
+
+function updateSummary() {
+    const max = document.getElementById('max_duration').value || '—';
+    const min = document.getElementById('min_duration').value || '—';
+    document.getElementById('sum-format').textContent = checkedLabel('aspect_ratio');
+    document.getElementById('sum-layout').textContent = checkedLabel('layout');
+    document.getElementById('sum-caption').textContent = checkedLabel('caption_preset') + ' · ' + document.getElementById('caption_font').value;
+    document.getElementById('sum-clips').textContent = (document.getElementById('num_clips').value || '—') + ' de ' + min + ' a ' + max + ' s';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('newCutForm');
+    form.addEventListener('change', updateSummary);
+    form.addEventListener('input', updateSummary);
     toggleSourceInput();
     toggleAspectRatioLimits();
+    updateCaptionFont();
 });
 </script>
 {% endblock %}

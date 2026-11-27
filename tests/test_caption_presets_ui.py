@@ -53,7 +53,7 @@ class TestCaptionPresetsUI(unittest.TestCase):
     def test_index_renders_caption_presets_selector(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Estilo Visual da Legenda", response.data)
+        self.assertIn("Estilo da legenda".encode(), response.data)
         self.assertIn(b"Karaoke Destaque", response.data)
         self.assertIn(b"progressive-word-highlight", response.data)
 

@@ -302,9 +302,17 @@ def rerender_clip_job(clip_id, video_path, template_id):
 @app.route('/')
 def index():
     templates_available = db.list_templates(config.DB_PATH)
+    # Mesma resolução de chaves que clip_selection.suggest_clips_for_video (banco, depois .env).
+    ai_enabled = any(db.get_setting(config.DB_PATH, key, fallback) for key, fallback in (
+        ("gemini_api_key", config.GEMINI_API_KEY),
+        ("openai_api_key", os.getenv("OPENAI_API_KEY")),
+        ("anthropic_api_key", os.getenv("ANTHROPIC_API_KEY")),
+        ("nvidia_nim_api_key", config.NVIDIA_NIM_API_KEY),
+    ))
     return render_template(
         'index.html', templates=templates_available,
         caption_presets=CAPTION_PRESETS_METADATA, caption_fonts=CAPTION_FONTS,
+        ai_enabled=ai_enabled,
     )
 
 @app.route('/projects')

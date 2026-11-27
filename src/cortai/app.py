@@ -833,8 +833,13 @@ def _run_in_window(webview, url: str) -> None:
             time.sleep(0.1)
 
     webview.settings['ALLOW_DOWNLOADS'] = True  # botão "Baixar" dos clipes
+    if sys.platform == 'win32':
+        # Identidade própria na barra de tarefas; sem isso o Windows agrupa com o python.exe e usa o ícone dele.
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('Cortai.App')
+    icon = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'cortai.ico')
     webview.create_window('Cortaí', url, width=1320, height=880, min_size=(900, 640))
-    webview.start()  # bloqueia até a janela fechar; o servidor (daemon) encerra junto
+    webview.start(icon=icon)  # bloqueia até a janela fechar; o servidor (daemon) encerra junto
 
 
 if __name__ == '__main__':

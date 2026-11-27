@@ -21,7 +21,7 @@ def build():
 import sys
 from PyInstaller.utils.hooks import collect_all, collect_data_files
 
-datas = [('src/cortai/templates', 'cortai/templates'), ('src/cortai/models', 'cortai/models')]
+datas = [('src/cortai/templates', 'cortai/templates'), ('src/cortai/models', 'cortai/models'), ('src/cortai/assets', 'cortai/assets')]
 # Modelo de detecção de voz (silero VAD) usado pela transcrição
 datas += collect_data_files('faster_whisper')
 binaries = []

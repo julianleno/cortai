@@ -1,108 +1,157 @@
 {% extends "base.html" %}
 
 {% block title %}
-{{ 'Editar Template' if template else 'Novo Template' }} — Cortaí
+{{ 'Editar template' if template else 'Novo template' }} — Cortaí
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8 col-md-10">
-        <div class="card card-cyber p-4">
-            <div class="card-body">
-                <h4 class="fw-bold mb-3"><i class="fas fa-sliders text-cyan me-2"></i>{{ 'Editar Template de Canal' if template else 'Novo Template de Canal' }}</h4>
-                <p class="text-muted small mb-4">Personalize fontes, estilos de legenda, layout de moldura e marca d'água para reutilizar em todos os seus vídeos.</p>
+{# Mesmos nomes e desenhos de enquadramento da tela Novo corte (index.html): [x, y, largura, altura, raio, cor] numa moldura 30x46 #}
+{% set layout_info = {
+    'auto': ('Segue o rosto', 'Centraliza quem fala', [8, 9, 14, 14, 7, '#FF6A2B'], [4, 27, 22, 19, 8, '#4A4A54']),
+    'active_speaker': ('Ativo por fala', 'Troca de rosto pela voz', [2, 8, 12, 12, 6, '#FF6A2B'], [16, 26, 12, 12, 6, '#4A4A54']),
+    'card_frame': ('Card social', 'Vídeo inteiro num card', [3, 16, 24, 15, 3, '#FF6A2B'], [3, 9, 16, 3, 2, '#4A4A54']),
+    'header_footer_frame': ('Editorial', 'Título no topo, marca embaixo', [0, 15, 30, 16, 0, '#FF6A2B'], [0, 0, 30, 9, 0, '#4A4A54']),
+    'blurred_background': ('Fundo desfocado', 'Vídeo inteiro, fundo borrado', [0, 0, 30, 46, 0, '#2E2E35'], [0, 15, 30, 16, 0, '#FF6A2B']),
+    'all_faces': ('Todos os rostos', 'Empilha quem aparece', [3, 4, 24, 18, 4, '#FF6A2B'], [3, 24, 24, 18, 4, '#FF6A2B']),
+    'center': ('Crop central', 'Recorte fixo no meio', [6, 0, 18, 46, 0, '#FF6A2B'], None),
+} %}
+{% set layout_order = ['auto', 'active_speaker', 'card_frame', 'header_footer_frame', 'blurred_background', 'all_faces', 'center'] %}
+{% set positions = [
+    ('top-left', 'Topo, à esquerda'),
+    ('top-right', 'Topo, à direita'),
+    ('bottom-left', 'Rodapé, à esquerda'),
+    ('bottom-right', 'Rodapé, à direita'),
+    ('center', 'Centro'),
+] %}
 
-                <form method="POST">
-                    <div class="mb-4">
-                        <label for="name" class="form-label font-weight-bold fw-bold">Nome do Template</label>
-                        <input type="text" class="form-control bg-dark text-light border-secondary p-2" id="name" name="name" required
-                               placeholder="Ex: Canal Principal Shorts" value="{{ template.name if template else '' }}">
-                    </div>
+<form method="POST" id="templateForm" class="d-flex flex-column gap-3 pt-3 mx-auto" style="max-width: 920px;">
+    <div class="mb-2">
+        <nav aria-label="Trilha" class="ct-hint mb-2" style="font-size: 0.875rem;">
+            <a href="{{ url_for('templates_list') }}" style="color: var(--text-muted);">Templates</a> / {{ 'Editar' if template else 'Novo' }}
+        </nav>
+        <h1 class="fw-bold mb-1" style="font-size: 2rem; letter-spacing: -0.03em;">{{ 'Editar template' if template else 'Novo template' }}</h1>
+        <p class="mb-0 ct-hint" style="font-size: 0.95rem;">Escolha uma vez e use em todos os cortes do canal.</p>
+    </div>
 
-                    <div class="row mb-4">
-                        <div class="col-md-6 mb-3 mb-md-0">
-                            <label for="layout" class="form-label font-weight-bold fw-bold">Layout & Moldura</label>
-                            <select class="form-select bg-dark text-light border-secondary p-2" id="layout" name="layout">
-                                {% for opt in layouts %}
-                                <option value="{{ opt }}" {{ 'selected' if cfg.layout == opt else '' }}>
-                                    {% if opt == 'auto' %}👤 Automático (Segue o rosto)
-                                    {% elif opt == 'active_speaker' %}🗣️ Ativo por Fala (Lip-Sync Troca de Rosto)
-                                    {% elif opt == 'card_frame' %}📇 Moldura Social Card (Estilo Twitter/Instagram)
-                                    {% elif opt == 'header_footer_frame' %}🖼️ Moldura Editorial (Topo Título + Rodapé)
-                                    {% elif opt == 'blurred_background' %}🌫️ Fundo Desfocado (Cena Inteira)
-                                    {% elif opt == 'all_faces' %}👥 Manter Todos os Rostos (Empilhado)
-                                    {% else %}🎯 Crop Central Fixo
-                                    {% endif %}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="caption_font" class="form-label font-weight-bold fw-bold">Fonte da Legenda</label>
-                            <select class="form-select bg-dark text-light border-secondary p-2" id="caption_font" name="caption_font">
-                                {% for font in caption_fonts %}
-                                <option value="{{ font }}" {{ 'selected' if cfg.caption_font == font else '' }}>{{ font }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
+    <!-- 1. Nome -->
+    <section class="ct-section" aria-labelledby="s-nome">
+        <div class="ct-section-head">
+            <span class="ct-step">1</span>
+            <h2 class="ct-h2" id="s-nome">Nome</h2>
+        </div>
+        <label for="name" class="ct-label">Nome do template</label>
+        <input type="text" class="ct-field" id="name" name="name" required
+               placeholder="Ex.: Canal Principal Shorts" value="{{ template.name if template else '' }}">
+    </section>
 
-                    <div class="row mb-4">
-                        <div class="col-md-6 mb-3 mb-md-0">
-                            <label for="caption_preset" class="form-label font-weight-bold fw-bold">Preset Visual da Legenda</label>
-                            <select class="form-select bg-dark text-light border-secondary p-2" id="caption_preset" name="caption_preset">
-                                {% for opt in caption_presets %}
-                                <option value="{{ opt }}" {{ 'selected' if cfg.caption_preset == opt else '' }}>
-                                    {% if caption_presets_metadata.get(opt) %}{{ caption_presets_metadata[opt].label }} ({{ opt }}){% else %}{{ opt }}{% endif %}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="casing_mode" class="form-label font-weight-bold fw-bold">Capitalização do Texto</label>
-                            <select class="form-select bg-dark text-light border-secondary p-2" id="casing_mode" name="casing_mode">
-                                <option value="uppercase" {{ 'selected' if cfg.casing_mode == 'uppercase' else '' }}>UPPERCASE (TUDO MAIÚSCULO)</option>
-                                <option value="titlecase" {{ 'selected' if cfg.casing_mode in ('titlecase', 'first_letter') else '' }}>TitleCase Gramatical</option>
-                            </select>
-                        </div>
-                    </div>
+    <!-- 2. Enquadramento -->
+    <section class="ct-section" aria-labelledby="s-enq">
+        <div class="ct-section-head">
+            <span class="ct-step">2</span>
+            <h2 class="ct-h2" id="s-enq">Enquadramento</h2>
+        </div>
+        <div class="ct-grid" role="radiogroup" aria-labelledby="s-enq">
+            {% for key in layout_order + (layouts|reject('in', layout_order)|list) if key in layouts %}
+            {% set title, sub, a, b = layout_info.get(key, (key, '', [6, 0, 18, 46, 0, '#FF6A2B'], None)) %}
+            <div>
+                <input type="radio" class="ct-opt-input" name="layout" id="layout_{{ key }}" value="{{ key }}" {{ 'checked' if cfg.layout == key }} autocomplete="off">
+                <label class="ct-opt" for="layout_{{ key }}">
+                    <span class="ct-glyph" aria-hidden="true">
+                        <span style="left: {{ a[0] }}px; top: {{ a[1] }}px; width: {{ a[2] }}px; height: {{ a[3] }}px; border-radius: {{ a[4] }}px; background: {{ a[5] }};"></span>
+                        {% if b %}<span style="left: {{ b[0] }}px; top: {{ b[1] }}px; width: {{ b[2] }}px; height: {{ b[3] }}px; border-radius: {{ b[4] }}px; background: {{ b[5] }};"></span>{% endif %}
+                    </span>
+                    <span><span class="ct-opt-title">{{ title }}</span><span class="ct-opt-sub">{{ sub }}</span></span>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
 
-                    <!-- Watermark Options -->
-                    <div class="mb-4 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-dark);">
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" role="switch" id="watermark_enabled" name="watermark_enabled"
-                                   {{ 'checked' if cfg.watermark.enabled else '' }}>
-                            <label class="form-check-label fw-bold" for="watermark_enabled">Ativar Marca d'Água no Vídeo</label>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="watermark_position" class="form-label small">Posição</label>
-                                <select class="form-select form-select-sm bg-dark text-light border-secondary" id="watermark_position" name="watermark_position">
-                                    <option value="top-left" {{ 'selected' if cfg.watermark.position == 'top-left' else '' }}>Topo Esquerda</option>
-                                    <option value="top-right" {{ 'selected' if cfg.watermark.position == 'top-right' else '' }}>Topo Direita</option>
-                                    <option value="bottom-left" {{ 'selected' if cfg.watermark.position == 'bottom-left' else '' }}>Rodapé Esquerda</option>
-                                    <option value="bottom-right" {{ 'selected' if cfg.watermark.position == 'bottom-right' else '' }}>Rodapé Direita</option>
-                                    <option value="center" {{ 'selected' if cfg.watermark.position == 'center' else '' }}>Centro</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="watermark_opacity" class="form-label small">Opacidade (0.1 a 1.0)</label>
-                                <input type="number" class="form-control form-control-sm bg-dark text-light border-secondary" id="watermark_opacity" name="watermark_opacity"
-                                       step="0.1" min="0.1" max="1.0" value="{{ cfg.watermark.opacity }}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a href="{{ url_for('templates_list') }}" class="btn btn-outline-cyber">Cancelar</a>
-                        <button type="submit" class="btn btn-magenta fw-bold px-4">
-                            <i class="fas fa-check me-1"></i>Salvar Template
-                        </button>
-                    </div>
-                </form>
+    <!-- 3. Legenda -->
+    <section class="ct-section" aria-labelledby="s-leg">
+        <div class="ct-section-head">
+            <span class="ct-step">3</span>
+            <h2 class="ct-h2" id="s-leg">Legenda</h2>
+        </div>
+        <span class="ct-label" id="caption-style-label">Estilo da legenda</span>
+        <div class="ct-grid ct-grid-caps mb-3" role="radiogroup" aria-labelledby="caption-style-label">
+            {% for preset_key, preset_info in caption_presets_metadata.items() if preset_key in caption_presets %}
+            <div>
+                <input type="radio" class="ct-opt-input" name="caption_preset" id="preset-radio-{{ preset_key }}" value="{{ preset_key }}" {{ 'checked' if cfg.caption_preset == preset_key }} autocomplete="off">
+                <label class="ct-opt ct-opt-col" for="preset-radio-{{ preset_key }}" title="{{ preset_info.description }}">
+                    <span class="ct-cap" aria-hidden="true"><span class="ct-cap-text" style="{{ preset_info.css }}">{{ preset_info.sample|safe }}</span></span>
+                    <span class="ct-opt-title px-1" style="font-size: 0.875rem; font-weight: 600;">{{ preset_info.label }}</span>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="caption_font" class="ct-label">Fonte</label>
+                <select class="ct-field" id="caption_font" name="caption_font" onchange="updateCaptionFont()">
+                    {% for font in caption_fonts %}
+                    <option value="{{ font }}" {{ 'selected' if cfg.caption_font == font }}>{{ font }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <span class="ct-label" id="casing-label">Capitalização</span>
+                <div class="ct-seg" role="radiogroup" aria-labelledby="casing-label">
+                    <input type="radio" class="ct-opt-input" name="casing_mode" id="casing_uppercase" value="uppercase" {{ 'checked' if cfg.casing_mode not in ('titlecase', 'first_letter') }} autocomplete="off">
+                    <label for="casing_uppercase">CAIXA-ALTA</label>
+                    <input type="radio" class="ct-opt-input" name="casing_mode" id="casing_titlecase" value="titlecase" {{ 'checked' if cfg.casing_mode in ('titlecase', 'first_letter') }} autocomplete="off">
+                    <label for="casing_titlecase">Título Gramatical</label>
+                </div>
             </div>
         </div>
+    </section>
+
+    <!-- 4. Marca d'água -->
+    <section class="ct-section" aria-labelledby="s-marca">
+        <div class="ct-section-head">
+            <span class="ct-step">4</span>
+            <h2 class="ct-h2" id="s-marca">Marca d'água</h2>
+        </div>
+        <div class="row g-3">
+            <div class="col-12">
+                <span class="ct-label" id="watermark-label">Marca d'água no vídeo</span>
+                {# a rota liga a marca só quando watermark_enabled == 'on' #}
+                <div class="ct-seg" role="radiogroup" aria-labelledby="watermark-label" style="max-width: 420px;">
+                    <input type="radio" class="ct-opt-input" name="watermark_enabled" id="watermark_disabled" value="off" {{ 'checked' if not cfg.watermark.enabled }} autocomplete="off">
+                    <label for="watermark_disabled">Desligada</label>
+                    <input type="radio" class="ct-opt-input" name="watermark_enabled" id="watermark_enabled" value="on" {{ 'checked' if cfg.watermark.enabled }} autocomplete="off">
+                    <label for="watermark_enabled">Ligada</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label for="watermark_position" class="ct-label">Posição</label>
+                <select class="ct-field" id="watermark_position" name="watermark_position">
+                    {% for value, label in positions %}
+                    <option value="{{ value }}" {{ 'selected' if cfg.watermark.position == value }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="watermark_opacity" class="ct-label">Opacidade</label>
+                <input type="number" class="ct-field" id="watermark_opacity" name="watermark_opacity"
+                       step="0.1" min="0.1" max="1.0" value="{{ cfg.watermark.opacity }}" aria-describedby="watermark_opacity_help">
+                <div class="ct-hint mt-1" id="watermark_opacity_help">De 0.1 (quase invisível) a 1.0 (sólida)</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="d-flex flex-wrap justify-content-end gap-2 pt-2">
+        <a href="{{ url_for('templates_list') }}" class="btn btn-outline-cortai ct-btn">Cancelar</a>
+        <button type="submit" class="btn btn-caju ct-btn px-4"><i class="fas fa-check" aria-hidden="true"></i>Salvar template</button>
     </div>
-</div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateCaptionFont() {
+    document.getElementById('templateForm').style.setProperty('--cap-font', "'" + document.getElementById('caption_font').value + "'");
+}
+document.addEventListener('DOMContentLoaded', updateCaptionFont);
+</script>
 {% endblock %}

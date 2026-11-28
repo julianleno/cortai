@@ -15,15 +15,6 @@ Templates — Cortaí
     'all_faces': ('Todos os rostos', [3, 4, 24, 18, 4, '#FF6A2B'], [3, 24, 24, 18, 4, '#FF6A2B']),
     'center': ('Crop central', [6, 0, 18, 46, 0, '#FF6A2B'], None),
 } %}
-{# ponytail: cópia dos rótulos de CAPTION_PRESETS_METADATA (a rota não os envia); chave desconhecida aparece crua #}
-{% set preset_labels = {
-    'progressive-word-highlight': 'Karaoke Destaque',
-    'white-bold': 'Branco Bold',
-    'yellow-bold': 'Amarelo Bold',
-    'white-yellow-keyword': 'Branco + Amarelo',
-    'white-red-highlight': 'Destaque Vermelho',
-    'cyan-shadow': 'Ciano com Sombra',
-} %}
 <div class="d-flex flex-column gap-4 pt-3 mx-auto" style="max-width: 920px;">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
         <div>
@@ -47,7 +38,7 @@ Templates — Cortaí
                 <h2 class="ct-h2 mb-2 text-break" style="font-size: 1.125rem;">{{ tpl.name }}</h2>
                 <div class="d-flex flex-wrap gap-2">
                     <span class="ct-chip ct-chip-muted">{{ info[0] }}</span>
-                    <span class="ct-chip ct-chip-muted">{{ preset_labels.get(tpl.config.caption_preset, tpl.config.caption_preset) }} · {{ tpl.config.caption_font }}</span>
+                    <span class="ct-chip ct-chip-muted">{{ caption_presets.get(tpl.config.caption_preset, {}).get('label', tpl.config.caption_preset) }} · {{ tpl.config.caption_font }}</span>
                     {% if tpl.config.watermark.enabled %}
                     <span class="ct-chip ct-chip-caju">Marca d'água</span>
                     {% else %}

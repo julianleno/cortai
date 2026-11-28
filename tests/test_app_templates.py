@@ -49,7 +49,10 @@ class TestAppTemplates(unittest.TestCase):
                     {"caption_preset": preset}
                 )
                 app_module.db.create_template(
-                    app_module.config.DB_PATH, "tpl-" + preset, "Example " + preset, cfg
+                    app_module.config.DB_PATH,
+                    "tpl-" + preset,
+                    "Example " + preset,
+                    cfg,
                 )
 
         response = app_module.app.test_client().get('/templates')

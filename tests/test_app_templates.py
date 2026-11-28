@@ -45,7 +45,9 @@ class TestAppTemplates(unittest.TestCase):
 
         for preset in ("spoken-word-pop", "white-box", "cyan-shadow"):
             with self.subTest(preset=preset):
-                cfg = template_config.validate_template_config({"caption_preset": preset})
+                cfg = template_config.validate_template_config(
+                    {"caption_preset": preset}
+                )
                 app_module.db.create_template(
                     app_module.config.DB_PATH, "tpl-" + preset, "Example " + preset, cfg
                 )

@@ -39,6 +39,38 @@ class TestAppTemplates(unittest.TestCase):
         response = client.get('/templates')
         self.assertEqual(response.status_code, 200)
 
+    def test_templates_list_uses_caption_preset_metadata(self):
+        app_module = self._fresh_app()
+        from cortai import templates as template_config
+
+        for preset in ("spoken-word-pop", "white-box", "cyan-shadow"):
+            with self.subTest(preset=preset):
+                cfg = template_config.validate_template_config({"caption_preset": preset})
+                app_module.db.create_template(
+                    app_module.config.DB_PATH, "tpl-" + preset, "Example " + preset, cfg
+                )
+
+        response = app_module.app.test_client().get('/templates')
+        self.assertEqual(response.status_code, 200)
+        text = response.get_data(as_text=True)
+        for preset in ("spoken-word-pop", "white-box", "cyan-shadow"):
+            label = app_module.CAPTION_PRESETS_METADATA[preset]["label"]
+            self.assertIn(label, text)
+
+    def test_templates_list_preserves_unknown_caption_preset(self):
+        app_module = self._fresh_app()
+        from cortai import templates as template_config
+
+        cfg = template_config.validate_template_config({})
+        cfg["caption_preset"] = "future-preset"
+        app_module.db.create_template(
+            app_module.config.DB_PATH, "tpl-future", "Future template", cfg
+        )
+
+        response = app_module.app.test_client().get('/templates')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("future-preset", response.get_data(as_text=True))
+
     def test_create_template_via_form(self):
         app_module = self._fresh_app()
         client = app_module.app.test_client()

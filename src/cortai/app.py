@@ -753,7 +753,11 @@ def _template_form_context(template=None):
 
 @app.route('/templates')
 def templates_list():
-    return render_template('templates_list.html', templates=db.list_templates(config.DB_PATH))
+    return render_template(
+        'templates_list.html',
+        templates=db.list_templates(config.DB_PATH),
+        caption_presets=CAPTION_PRESETS_METADATA,
+    )
 
 @app.route('/templates/new', methods=['GET', 'POST'])
 def templates_new():
